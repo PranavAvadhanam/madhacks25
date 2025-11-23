@@ -28,6 +28,8 @@ class ProcessedPacket(Base):
     # The "Human" Translation
     # e.g. "Initiating a secure connection to a web server."
     friendly_summary = Column(String(255)) 
+    friendly_src = Column(String(255))
+    friendly_dst = Column(String(255))
     
     # JSON string for the "Educational Mode" sidebar
     # e.g. '{"flag_explanation": "SYN means synchronize...", "port_explanation": "..."}'
