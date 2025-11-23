@@ -5,13 +5,15 @@ from textual.widgets import Header, Footer, DataTable, Input
 from textual.containers import Container
 from textual import on
 
-from textual.widgets import Header, Footer, DataTable, Input, Log
+from textual.widgets import Header, Footer, DataTable, Input
 
 from database import get_all_packets
 from core.engine import main_engine as core_engine
 
 class WireShrimpApp(App):
     """A Textual app for live packet sniffing."""
+
+    ENABLE_COMMAND_PALETTE = False
 
     CSS_PATH = "tui.css"
     BINDINGS = [
@@ -33,7 +35,6 @@ class WireShrimpApp(App):
         """Create child widgets for the app."""
         yield Header()
         yield DataTable(id="packet_table")
-        yield Log(id="log_panel", max_lines=200) # Visible log panel
         yield Input(placeholder="Enter command (e.g., stop, start, quit)", id="command_input")
         yield Footer()
 
@@ -42,21 +43,18 @@ class WireShrimpApp(App):
         table = self.query_one(DataTable)
         table.add_columns(*self.PACKET_TABLE_COLUMNS)
         # Start the background workers
-        self.log_message("App mounted. Starting background workers...")
+        print("App mounted. Starting background workers...")
         self.update_table_worker = self.run_worker(self.update_packet_table, exclusive=False, name="TableUpdater")
         self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
     
-    def log_message(self, message: str) -> None:
-        """Thread-safe method to write a message to the on-screen log."""
-        log_panel = self.query_one(Log)
-        log_panel.write_line(f"{datetime.now().strftime('%H:%M:%S')} | {message}")
+
 
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
         """Handle command input from the user."""
         command = event.value.lower().strip()
         self.query_one(Input).value = ""
-        self.log_message(f"Command received: '{command}'")
+        print(f"Command received: '{command}'")
         
         if command == "quit":
             self.sniffer_worker.cancel()
@@ -65,24 +63,24 @@ class WireShrimpApp(App):
             if self.is_sniffing:
                 self.sniffer_worker.cancel()
                 self.is_sniffing = False
-                self.log_message("Packet sniffer stopped.")
+                print("Packet sniffer stopped.")
         elif command == "start":
             if not self.is_sniffing:
                 self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=True, name="Sniffer")
                 self.is_sniffing = True
-                self.log_message("Packet sniffer started.")
+                print("Packet sniffer started.")
         else:
-            self.log_message(f"Unknown command: '{command}'")
+            print(f"Unknown command: '{command}'")
 
     async def run_sniffer(self) -> None:
         """Worker to run the core packet sniffing engine."""
         try:
-            self.log_message("Sniffer worker started.")
+            print("Sniffer worker started.")
             await core_engine(interface=self.interface)
         except asyncio.CancelledError:
-            self.log_message("Sniffer worker cancelled by request.")
+            print("Sniffer worker cancelled by request.")
         except Exception as e:
-            self.log_message(f"[ERROR] Sniffer worker failed: {e}")
+            print(f"[ERROR] Sniffer worker failed: {e}")
 
     async def update_packet_table(self) -> None:
         """Periodically queries the database and redraws the entire table."""
@@ -92,10 +90,10 @@ class WireShrimpApp(App):
         display_limit = 1000
         while self.is_running:
             try:
-                self.log_message("UI worker: Attempting to fetch packets...")
+                print("UI worker: Attempting to fetch packets...")
                 # Run the synchronous DB call in a thread
                 all_packets = await asyncio.to_thread(get_all_packets)
-                self.log_message(f"UI worker: Fetched {len(all_packets)} packets.")
+                print(f"UI worker: Fetched {len(all_packets)} packets.")
                 
                 # We want the most recent packets.
                 # Get the last `display_limit` packets, then reverse to have newest first.
@@ -177,7 +175,7 @@ class WireShrimpApp(App):
                             pass
 
             except Exception as e:
-                self.log_message(f"[ERROR] Failed to update table: {e}")
+                print(f"[ERROR] Failed to update table: {e}")
 
             # Wait before the next refresh
             await asyncio.sleep(.2)

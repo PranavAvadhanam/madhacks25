@@ -12,12 +12,6 @@ Header {
     height: 1;
 }
 
-Footer {
-    background: #282828;
-    color: #e0e0e0;
-    text-align: center;
-    height: 1;
-}
 
 /* ui/tui.css */
 
@@ -38,7 +32,7 @@ Header {
 
 Footer {
     dock: bottom;
-    height: 1;
+    height: 0;
     background: #282828;
     color: #e0e0e0;
     text-align: center;
