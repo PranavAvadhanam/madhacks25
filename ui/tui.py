@@ -2,7 +2,6 @@ import asyncio
 from datetime import datetime
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable, Input, Markdown
-from textual.theme import Theme
 from textual.containers import Container
 from textual import on
 import json
@@ -10,26 +9,6 @@ import json
 # Assumed imports based on your snippet
 from database import get_all_packets, get_packet_by_id
 from core.engine import main_engine as core_engine
-
-everforest_theme = Theme(
-    name="everforest",
-    primary="#A7C080",  # Green from accents                                         
-    secondary="#E67E80", # Red from accents                                          
-    accent="#DBBC7F",   # Yellow/brown from accents                                  
-    foreground="#D3C6AA", # Default foreground                                       
-    background="#1E2326", # Hard dark background                                     
-    success="#A7C080",  # Green from accents                                         
-    warning="#E69875",  # Orange from accents                                        
-    error="#E67E80",    # Red from accents                                           
-    surface="#272E33",  # Slightly lighter background                                
-    panel="#2E383C",    # Another slightly lighter background                        
-    dark=True,                                                                       
-    variables={                                                                      
-        "block-cursor-text-style": "none",                                           
-        "footer-key-foreground": "#A7C080",                                          
-        "input-selection-background": "#83C092 35%", # A green from accents with     
-    },                                                                               
-)
 
 class WireShrimpApp(App):
     """A Textual app for live packet sniffing."""
@@ -50,7 +29,7 @@ class WireShrimpApp(App):
 
     def __init__(self, interface: str | None = None):
         super().__init__()
-        self.interface = interface        
+        self.interface = interface
         self.is_sniffing = True  # Start sniffing by default
         self.current_filter: str | None = None  # Store the active filter
 
@@ -61,15 +40,14 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, view <id>", id="command_input")
+        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, quit window (qw), view <id>", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
         """Called when the app is mounted to the DOM."""
+        self.theme = "gruvbox"
         table = self.query_one(DataTable)
         table.add_columns(*self.PACKET_TABLE_COLUMNS)
-        self.register_theme(everforest_theme)  
-        self.theme = "everforest"
         
         # Start the background workers
         print("App mounted. Starting background workers...")
@@ -84,6 +62,8 @@ class WireShrimpApp(App):
         if packet:
             self.screen.add_class("dimmed")
             content = f"## Packet ID: {packet.id}\n\n"
+            content += f"**Friendly Source Name:** {packet.friendly_src}\n"
+            content += f"**Friendly Destination Name:** {packet.friendly_dst}\n"
             content += f"**Timestamp:** {packet.timestamp}\n"
             content += f"**Source:** {packet.source_ip}\n"
             content += f"**Destination:** {packet.destination_ip}\n"
@@ -187,8 +167,8 @@ class WireShrimpApp(App):
         print(f"Command received: '{command}'")
         
         if command == "quit":
-            self.sniffer_worker.cancel()
-            self.exit()
+           self.sniffer_worker.cancel()
+           self.exit()
 
         elif command == "stop":
             if self.is_sniffing:
@@ -196,11 +176,17 @@ class WireShrimpApp(App):
                 self.is_sniffing = False
                 self.notify("Packet sniffer stopped.")
 
+
         elif command == "start":
             if not self.is_sniffing:
                 self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
                 self.is_sniffing = True
                 self.notify("Packet sniffer started.")
+
+
+        elif command == "qw" or command == "quit window":
+            self.action_hide_details()
+
 
         elif command == "filter":
             # Handle 'filter clear' or 'filter <protocol>'
@@ -214,6 +200,7 @@ class WireShrimpApp(App):
                     self.notify(f"Filtering for protocol: {arg.upper()}")
             else:
                 self.notify("Usage: filter <protocol> OR filter clear")
+
 
         elif command == "view":
             if len(command_parts) > 1 and command_parts[1].isdigit():
