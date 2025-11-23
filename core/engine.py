@@ -5,21 +5,24 @@ from scapy.all import AsyncSniffer, IP, IPv6, TCP, UDP
 # This will likely be a dataclass or a simple dictionary
 Packet = Dict[str, Any]
 
-# Try to import database insertion helper; fall back to in-memory store if not available
+# Buffer storage fallback for when DB is unavailable
 PACKET_STORE: list[Dict[str, Any]] = []
+
+# Try to import async bulk insert from database module
 _db_enabled = False
+_db_bulk_async = None
 try:
-    from database.db import insert_processed_packet, init_db  # type: ignore
+    from database.db import bulk_insert_processed_packets_async, init_db  # type: ignore
 
     try:
         init_db()
+        _db_bulk_async = bulk_insert_processed_packets_async
         _db_enabled = True
-        print("Database initialized: packets will be stored in database/db.py -> packets.db")
+        print("Database batch inserter available; DB batching enabled.")
     except Exception as e:
-        print(f"Warning: failed to initialize DB ({e}). Falling back to in-memory store.")
+        print(f"Warning: DB init failed ({e}); falling back to in-memory buffer.")
         _db_enabled = False
 except Exception:
-    # If import fails (for example during dev without DB module), keep fallback
     _db_enabled = False
 
 
@@ -123,23 +126,76 @@ async def process_and_store(packet_queue: asyncio.Queue):
     Takes packets from the queue, processes them, and stores them.
     """
     print("Starting packet processor and storer.")
-    while True:
-        raw_packet = await packet_queue.get()
-        print(f"Processing and storing packet ID: {raw_packet.get('id')}")
-        processed_packet = process_packet(raw_packet)
-        # Store the processed packet: prefer DB, otherwise keep in-memory.
-        if _db_enabled:
-            try:
-                insert_processed_packet(processed_packet)
-            except Exception as e:
-                # On DB failure, fall back to in-memory so packets aren't lost during runtime
-                print(f"DB insert failed: {e}; falling back to in-memory store.")
-                PACKET_STORE.append(processed_packet)
-        else:
-            PACKET_STORE.append(processed_packet)
+    # Buffering configuration
+    BUFFER_MAX = 100
+    FLUSH_INTERVAL = 5.0  # seconds
 
-        print(f"Stored processed packet: {processed_packet}")
-        packet_queue.task_done()
+    buffer: list[Dict[str, Any]] = []
+    timer_task: asyncio.Task | None = None
+
+    async def _flush_buffer():
+        nonlocal buffer
+        if not buffer:
+            return
+        batch = buffer
+        buffer = []
+
+        if _db_enabled and _db_bulk_async is not None:
+            try:
+                # call the async bulk insert
+                await _db_bulk_async(batch)
+            except Exception as e:
+                print(f"DB bulk insert failed: {e}; falling back to in-memory storage.")
+                PACKET_STORE.extend(batch)
+        else:
+            # fallback: keep packets in memory
+            PACKET_STORE.extend(batch)
+
+    async def _timer_flush():
+        try:
+            await asyncio.sleep(FLUSH_INTERVAL)
+            await _flush_buffer()
+        except asyncio.CancelledError:
+            # Timer cancelled because we flushed early
+            return
+
+    try:
+        while True:
+            raw_packet = await packet_queue.get()
+            print(f"Processing and storing packet ID: {raw_packet.get('id')}")
+            processed_packet = process_packet(raw_packet)
+
+            buffer.append(processed_packet)
+
+            # start timer when first item arrives
+            if len(buffer) == 1 and (timer_task is None or timer_task.done()):
+                timer_task = asyncio.create_task(_timer_flush())
+
+            # flush immediately when we hit buffer size
+            if len(buffer) >= BUFFER_MAX:
+                # cancel timer and flush
+                if timer_task is not None and not timer_task.done():
+                    timer_task.cancel()
+                    try:
+                        await timer_task
+                    except Exception:
+                        pass
+                    timer_task = None
+                await _flush_buffer()
+
+            print(f"Buffered packet (buffer size={len(buffer)})")
+            packet_queue.task_done()
+    finally:
+        # Ensure any remaining buffered packets are flushed on shutdown
+        if timer_task is not None and not timer_task.done():
+            timer_task.cancel()
+            try:
+                await timer_task
+            except Exception:
+                pass
+        await _flush_buffer()
+        print("Processor shutting down; flushed remaining packets.")
+
 
 
 async def main_engine(interface: str | None = None):
