@@ -10,28 +10,28 @@ class PacketTranslator:
         # 1. THE DICTIONARY: Mapping common ports to Human Concepts
         self.port_map = {
             # Web Traffic
-            80:  {"service": "HTTP", "desc": "Unencrypted Web Traffic", "icon": "🌐"},
-            443: {"service": "HTTPS", "desc": "Secure Web Traffic", "icon": "🔒"},
-            8080: {"service": "HTTP-Alt", "desc": "Alternative Web Port", "icon": "🌐"},
+            80:  {"service": "HTTP", "desc": "Unencrypted Web Traffic"},
+            443: {"service": "HTTPS", "desc": "Secure Web Traffic"},
+            8080: {"service": "HTTP-Alt", "desc": "Alternative Web Port"},
             
             # File & Command
-            20: {"service": "FTP-Data", "desc": "Transferring Files", "icon": "📁"},
-            21: {"service": "FTP", "desc": "File Transfer Control", "icon": "📁"},
-            22: {"service": "SSH", "desc": "Secure Remote Login", "icon": "💻"},
-            23: {"service": "Telnet", "desc": "Insecure Remote Login", "icon": "⚠️"},
+            20: {"service": "FTP-Data", "desc": "Transferring Files (FTP)"},
+            21: {"service": "FTP", "desc": "File Transfer Control"},
+            22: {"service": "SSH", "desc": "Secure Remote Login"},
+            23: {"service": "Telnet", "desc": "Insecure Remote Login"},
             
             # Email
-            25: {"service": "SMTP", "desc": "Sending Email", "icon": "📧"},
-            110: {"service": "POP3", "desc": "Receiving Email", "icon": "📧"},
-            143: {"service": "IMAP", "desc": "Syncing Email", "icon": "📧"},
+            25: {"service": "SMTP", "desc": "Sending Email"},
+            110: {"service": "POP3", "desc": "Receiving Email"},
+            143: {"service": "IMAP", "desc": "Syncing Email"},
             
             # Infrastructure / Gaming / Misc
-            53: {"service": "DNS", "desc": "Looking up IP addresses (Phonebook)", "icon": "🔍"},
-            67: {"service": "DHCP", "desc": "Requesting an IP address", "icon": "⚙️"},
-            68: {"service": "DHCP", "desc": "Receiving an IP address", "icon": "⚙️"},
-            123: {"service": "NTP", "desc": "Syncing Time", "icon": "🕒"},
-            3306: {"service": "MySQL", "desc": "Database Communication", "icon": "🗄️"},
-            25565: {"service": "Minecraft", "desc": "Minecraft Server", "icon": "🎮"},
+            53: {"service": "DNS", "desc": "Looking up IP addresses (Phonebook)"},
+            67: {"service": "DHCP", "desc": "Requesting an IP address"},
+            68: {"service": "DHCP", "desc": "Receiving an IP address"},
+            123: {"service": "NTP", "desc": "Syncing Time"},
+            3306: {"service": "MySQL", "desc": "Database Communication"},
+            25565: {"service": "Minecraft", "desc": "Minecraft Server"},
         }
 
     def _analyze_tcp_flags(self, flags: str) -> Tuple[str, str]:
@@ -46,7 +46,7 @@ class PacketTranslator:
         if 'S' in flags:
             return ("Connection Request", "Attempting to start a conversation (Knocking on the door).")
         if 'F' in flags:
-            return ("Conversation Finished", "One side is done talking and is politely hanging up.")
+            return ("Connection Finished", "One side is done talking and is politely hanging up.")
         if 'P' in flags:
             return ("Data Push", "Sending actual data to the application immediately.")
         
@@ -86,18 +86,19 @@ class PacketTranslator:
             flag_type, flag_explanation = self._analyze_tcp_flags(flags)
             
             friendly_data['friendly_summary'] = f"TCP {flag_type}: {base_desc}"
-            friendly_data['educational_data'] = f"**Concept: TCP Flags**\n{flag_explanation}\n\n**Service Context:**\n{base_desc}"
+            friendly_data['educational_data'] = f"### Concept: TCP Flags\n* **{flag_type}:** {flag_explanation}\n\n### Service Context\n* **{base_desc}**"
             
         elif proto == 'UDP':
             friendly_data['friendly_summary'] = f"UDP Data: {base_desc}"
-            friendly_data['educational_data'] = "**Concept: UDP**\nUser Datagram Protocol is like sending a letter without return receipt. It's fast but doesn't guarantee arrival. Used often for streaming or DNS."
+            friendly_data['educational_data'] = "### Concept: UDP\n* **User Datagram Protocol** is like sending a letter without a return receipt. \n* It's fast but doesn't guarantee arrival. \n* Used often for streaming, DNS, or online games."
             
         elif proto == 'ICMP':
             friendly_data['friendly_summary'] = "Ping / Network Diagnostic"
-            friendly_data['educational_data'] = "**Concept: ICMP**\nInternet Control Message Protocol. Usually used for 'Ping' to check if a computer is online."
+            friendly_data['educational_data'] = "### Concept: ICMP\n* **Internet Control Message Protocol**. \n* Usually used for 'Ping' to check if a computer is online."
 
         else:
             friendly_data['friendly_summary'] = f"{pkt.summary()}"
+            friendly_data['educational_data'] = "No educational data available for this protocol yet."
 
         return friendly_data
 

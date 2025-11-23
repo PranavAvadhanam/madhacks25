@@ -1,11 +1,10 @@
 /* ui/tui.css */
 
 Screen {
+    layer: main;
     background: #1e1e1e;
     color: #cccccc;
-    layout: grid;
-    grid-size: 1 1;
-    grid-gutter: 0;
+    layout: vertical;
 
     /* Scrollbar Styling */
     scrollbar-size-vertical: 0;
@@ -40,7 +39,6 @@ Footer {
     border: heavy #404040;
     overflow-x: scroll;
     scrollbar-size-horizontal: 0;
-    scrollbar-size-vertical: 1;
     background: #2d2d2d;
     color: #cccccc;
 }
@@ -58,12 +56,14 @@ Footer {
 #detail_view {
     layer: overlay;
     display: none;
-    align: center middle;
+
     background: #282828;
     border: wide #505050;
-    padding: 0;
+    padding: 1;
     width: 80%;
     height: 80%;
+    max-width: 100;
+    max-height: 30;
 }
 
 #detail_view.visible {

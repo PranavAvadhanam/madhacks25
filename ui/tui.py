@@ -5,7 +5,7 @@ from textual.widgets import Header, Footer, DataTable, Input
 from textual.containers import Container
 from textual import on
 
-from textual.widgets import Header, Footer, DataTable, Input, Static
+from textual.widgets import Header, Footer, DataTable, Input, Markdown
 
 from database import get_all_packets, get_packet_by_id
 from core.engine import main_engine as core_engine
@@ -37,7 +37,7 @@ class WireShrimpApp(App):
         yield Header()
         yield DataTable(id="packet_table")
         with Container(id="detail_view", classes="hidden"):
-            yield Static(id="detail_content")
+            yield Markdown(id="detail_content")
         yield Input(placeholder="Enter command (e.g., stop, start, quit, view <id>)", id="command_input")
         yield Footer()
 
@@ -55,7 +55,7 @@ class WireShrimpApp(App):
         """Fetch packet details and show them."""
         packet = await asyncio.to_thread(get_packet_by_id, packet_id)
         detail_view_container = self.query_one("#detail_view")
-        detail_content = self.query_one("#detail_content")
+        detail_content = self.query_one("#detail_content", Markdown)
         if packet:
             self.screen.add_class("dimmed")
             content = f"## Packet ID: {packet.id}\n\n"
