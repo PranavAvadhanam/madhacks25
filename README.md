@@ -14,10 +14,7 @@ We are building a Command-Line Interface (CLI) tool that serves as a "stepping s
 
 *   **Live Packet Capture:** Easily start and stop capturing packets on a selected network interface.
 *   **Simplified Packet View:** Instead of a raw data dump, packets are presented in a clean, human-readable summary, highlighting the most important information (IP addresses, ports, protocols).
-*   **User-Friendly Filtering:** Apply simple, intuitive filters based on common criteria like IP address, port number, or protocol (e.g., `http`, `dns`, `tcp`).
-*   **Real-Time Statistics:** View a live dashboard of basic network statistics, such as total packets captured, protocol distribution (e.g., 60% TCP, 30% UDP, 10% Other), and top conversations.
-*   **Conversation View:** Group packets into conversations (e.g., a complete TCP handshake and data transfer) to understand the flow of communication between two hosts.
-*   **Educational Mode:** An interactive "Packet Explainer" that allows users to select a packet and get a clear explanation of its different headers and fields (e.g., "This is the source IP address...").
+*   **Educational Mode:** An interactive "Packet Explainer" that allows users to select a packet and get a clear explanation of its different headers and fields (e.g., "Assigning Each IP an English name for better readability").
 
 ## Target Audience
 
