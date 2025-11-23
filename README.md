@@ -25,3 +25,19 @@ We are building a Command-Line Interface (CLI) tool that serves as a "stepping s
 *   Aspiring Software & Network Engineers
 *   Cybersecurity Beginners
 *   Anyone curious about the data flowing through their network!
+
+## Technical Design and Performance Notes
+
+### The High-Throughput Challenge: Handling Packet Streams
+
+During development, we encountered a critical performance bottleneck. The initial design attempted to write every captured network packet to the SQLite database individually.
+
+**Problem:** On an active network, packet capture can run at thousands of packets per second. Attempting a separate database write for each packet created extreme I/O overhead. This overwhelmed the database, causing the packet processing queue to back up and drop large numbers of packets. The application appeared to hang and failed to store any data.
+
+**Solution: Batch Processing:** The issue was resolved by implementing a **batch processing** strategy for database writes. The new design works as follows:
+1.  Captured packets are collected in a temporary in-memory list (a "batch").
+2.  The application writes the entire batch to the database in a single, efficient bulk transaction when one of two conditions is met:
+    *   The batch reaches a predefined size (e.g., 200 packets).
+    *   A timeout is reached (e.g., 2 seconds), ensuring data is saved even during periods of low traffic.
+
+This approach dramatically reduces database overhead and allows the application to keep up with high-traffic networks, ensuring reliable data capture.
