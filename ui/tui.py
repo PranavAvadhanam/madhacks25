@@ -40,6 +40,7 @@ class WireShrimpApp(App):
 
     def on_mount(self) -> None:
         """Called when the app is mounted to the DOM."""
+        self.theme = "gruvbox"
         table = self.query_one(DataTable)
         table.add_columns(*self.PACKET_TABLE_COLUMNS)
         # Start the background workers
@@ -135,7 +136,7 @@ class WireShrimpApp(App):
                 }
                 fixed_total = sum(fixed_widths.values()) + (len(self.PACKET_TABLE_COLUMNS) - 1) * 3
                 # leave at least 10 chars for Summary
-                max_summary = max(10, total_width - fixed_total)
+                max_summary = max(40, total_width - fixed_total)
 
                 def truncate(text: str, limit: int) -> str:
                     if text is None:
@@ -144,13 +145,18 @@ class WireShrimpApp(App):
                     return s if len(s) <= limit else s[: max(0, limit - 1)] + "…"
 
                 for pkt in packets_to_display:
+                    time_ago = ""
+                    if pkt.timestamp:
+                        delta = datetime.now() - pkt.timestamp
+                        time_ago = f"{int(delta.total_seconds())}s ago"
+                    
                     summary = truncate(pkt.friendly_summary, max_summary)
                     src = truncate(pkt.source_ip, fixed_widths["Src"])
                     dst = truncate(pkt.destination_ip, fixed_widths["Dst"])
                     proto = truncate(pkt.protocol_type, fixed_widths["Protocol"])
                     service = truncate(pkt.service_name, fixed_widths["Service"])
                     direction = truncate(pkt.traffic_direction, fixed_widths["Direction"])
-                    rows.append((pkt.id, pkt.timestamp, src, dst, proto, service, direction, summary))
+                    rows.append((pkt.id, time_ago, src, dst, proto, service, direction, summary))
                 
                 if rows:
                     table.add_rows(rows)

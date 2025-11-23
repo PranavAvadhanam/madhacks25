@@ -1,25 +1,20 @@
 /* ui/tui.css */
 
 Screen {
-    background: #1e1e1e; /* Dark background for the terminal app */
-    color: #cccccc;      /* Light grey text */
-}
-
-Header {
-    background: #282828;
-    color: #e0e0e0;
-    text-align: center;
-    height: 1;
-}
-
-
-/* ui/tui.css */
-
-Screen {
     background: #1e1e1e;
     color: #cccccc;
-    /* Use a vertical layout for the whole screen */
     layout: vertical;
+
+    /* Scrollbar Styling */
+    scrollbar-size-vertical: 1;
+    scrollbar-size-horizontal: 0;
+    scrollbar-background: red;
+    scrollbar-background-active: #4a4a4a;
+    scrollbar-background-hover: #4a4a4a;
+    scrollbar-color: #707070;
+    scrollbar-color-active: #aaaaaa;
+    scrollbar-color-hover: #808080;
+    scrollbar-corner-color: red;
 }
 
 Header {
@@ -39,20 +34,26 @@ Footer {
 }
 
 #packet_table {
-    /* Make the table take up all remaining vertical space */
-    width: 1fr;
     height: 1fr;
     border: heavy #404040;
-    /* Prevent horizontal scrolling by hiding horizontal overflow */
-    overflow-x: hidden;
+    overflow-x: scroll;
+    background: #2d2d2d;
+    color: #cccccc;
+
+    scrollbar-size-vertical: 1;
+    scrollbar-size-horizontal: 0;
+    scrollbar-background: transparent;
+    scrollbar-background-active: transparent;
+    scrollbar-background-hover: transparent;
+    scrollbar-color: #707070;
+    scrollbar-color-active: #aaaaaa;
+    scrollbar-color-hover: #808080;
+    scrollbar-corner-color: transparent;
 }
 
-#log_panel {
-    dock: bottom;
-    /* Give the log a fixed height */
-    height: 8;
-    border: wide #505050;
-    background: #252525;
+#packet_table:focus {
+    background: #2d2d2d;
+    color: #cccccc;
 }
 
 #command_input {
@@ -60,11 +61,10 @@ Footer {
     height: 3;
     background: #2d2d2d;
     color: #ffffff;
-    border: tall #505050;
+    border: tall white;
     padding: 0 1;
 }
 
 #command_input:focus {
-    background: #3e3e3e;
-    border: tall #007bff;
+    border: tall white;
 }

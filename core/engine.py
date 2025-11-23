@@ -137,7 +137,7 @@ async def process_and_store(packet_queue: asyncio.Queue):
     """
     batch = []
     BATCH_SIZE = 100
-    FLUSH_INTERVAL = 0.5
+    FLUSH_INTERVAL = 0.1
 
     while True:
         try:

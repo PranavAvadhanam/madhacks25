@@ -49,32 +49,28 @@ def run(interface):
     except Exception as e:
         print(f"\n[ERROR] An unexpected error occurred: {e}")
         sys.exit(1)
-    finally:
-        # This block will run after the Textual app exits
-        print("\n--- Captured Packets Summary ---")
-        if not os.path.exists(DB_FILE):
-            print("Database file not found. No packets were likely stored.")
-        else:
-            try:
-                all_packets = get_all_packets()
-                if not all_packets:
-                    print("No packets were stored in the database.")
-                else:
-                    print(f"Total packets captured: {len(all_packets)}")
-                    # Print details for the first 10 packets as a sample
-                    for packet in all_packets[:10]:
-                        print(
-                            f"  - ID: {packet.id}, Time: {packet.timestamp}, "
-                            f"Src: {packet.source_ip}, Dst: {packet.destination_ip}, "
-                            f"Proto: {packet.protocol_type}, Service: {packet.service_name}, "
-                            f"Direction: {packet.traffic_direction}\n"
-                            f"    Summary: {packet.friendly_summary}"
-                        )
-                    if len(all_packets) > 10:
-                        print(f"  ... and {len(all_packets) - 10} more.")
-            except Exception as e:
-                print(f"[ERROR] Error reading from database: {e}")
-        print("---------------------------------")
+        #finally:
+        #    # This block will run after the Textual app exits
+        #    if not os.path.exists(DB_FILE):
+        #    else:
+        #        try:
+        #            all_packets = get_all_packets()
+        #            if not all_packets:
+        #            else:
+        #                # Print details for the first 10 packets as a sample
+        #                for packet in all_packets[:10]:
+        #                    #print(
+        #                    #    f"  - ID: {packet.id}, Time: {packet.timestamp}, "
+        #                    #    f"Src: {packet.source_ip}, Dst: {packet.destination_ip}, "
+        #                    #    f"Proto: {packet.protocol_type}, Service: {packet.service_name}, "
+        #                    #    f"Direction: {packet.traffic_direction}\n"
+        #                    #    f"    Summary: {packet.friendly_summary}"
+        #                    #)
+        #                if len(all_packets) > 10:
+        #                    #print(f"  ... and {len(all_packets) - 10} more.")
+        #        except Exception as e:
+        #            print(f"[ERROR] Error reading from database: {e}")
+        #    print("---------------------------------")
 
 if __name__ == "__main__":
     cli()
