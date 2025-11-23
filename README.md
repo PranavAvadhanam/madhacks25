@@ -44,8 +44,9 @@ Installation
 
 Clone or download the repository
 
-```bash   git clone <repository-url>
-   cd WireShrimp
+```
+git clone <repository-url>
+cd WireShrimp
 ```
 Or download and extract the ZIP file, then navigate to the project directory.
 
