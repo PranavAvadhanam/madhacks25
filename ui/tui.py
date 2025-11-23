@@ -126,6 +126,33 @@ class WireShrimpApp(App):
         detail_view_container.remove_class("visible")
         detail_view_container.add_class("hidden")
 
+    async def show_help_details(self):
+        """Generate and show help information in the detail view."""
+        detail_view_container = self.query_one("#detail_view")
+        detail_content = self.query_one("#detail_content", Markdown)
+        
+        self.screen.add_class("dimmed")
+        
+        help_text = "## Available Commands\n\n"
+        help_text += "*   **`filter <protocol>`**: Filter packets by a specific protocol (e.g., `filter tcp`, `filter udp`).\n"
+        help_text += "*   **`filter clear`**: Clear the current packet filter.\n"
+        help_text += "*   **`stop`**: Stop the packet sniffing process.\n"
+        help_text += "*   **`start`**: Start the packet sniffing process if it was stopped.\n"
+        help_text += "*   **`view <id>`**: Display detailed information for a specific packet, identified by its ID.\n"
+        help_text += "*   **`help`**: Show this help message.\n"
+        help_text += "*   **`quit`**: Exit the application.\n"
+        help_text += "\n### Keyboard Shortcuts\n\n"
+        help_text += "*   **`d`**: Toggle dark mode.\n"
+        help_text += "*   **`q`**: Quit App.\n"
+        help_text += "*   **`escape`**: Hide the current detail view (e.g., Packet Info or Help).\n"
+
+
+        detail_content.update(help_text)
+        detail_view_container.border_title = "Guide"
+        detail_view_container.remove_class("hidden")
+        detail_view_container.add_class("visible")
+        detail_view_container.focus()
+
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
         """Handle command input from the user."""
@@ -172,6 +199,9 @@ class WireShrimpApp(App):
                 await self.show_packet_details(packet_id)
             else:
                 self.notify("Usage: view <packet_id>")
+
+        elif command == "help":
+            await self.show_help_details()
         else:
             self.notify(f"Unknown command: '{command}'")
 
