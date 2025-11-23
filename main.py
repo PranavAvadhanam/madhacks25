@@ -1,66 +1,56 @@
-import asyncio
 import sys
 import os
-from core import main_engine
+import click
+from ui.tui import WireShrimpApp
 from database import init_db, get_all_packets
 
 # The name of the database file
 DB_FILE = "packets.db"
 
-async def main():
+@click.group()
+def cli():
+    """WireShrimp CLI application for network packet analysis."""
+    pass
+
+@cli.command()
+@click.option(
+    "--interface",
+    "-i",
+    default=None,
+    help="Network interface to sniff on (e.g., 'en0', 'eth0', 'wlan0'). "
+         "If not specified, scapy will attempt to find a default."
+)
+def run(interface):
     """
-    Main asynchronous routine for the application.
-    Initializes DB, creates and manages the main application task.
+    Run the WireShrimp interactive Textual UI application.
+    You MUST run this with sudo: `sudo python3 main.py run`
     """
-    # --- IMPORTANT ---
-    # Set the network interface to use for sniffing here.
-    # On macOS/Linux, you can find your interface name by running `ifconfig` or `ip a`
-    # in your terminal. Common names are 'en0' (for Wi-Fi/Ethernet on macOS),
-    # 'eth0', or 'wlan0' (on Linux).
-    #
-    # Set this to None to let scapy try and pick a default.
-    INTERFACE_TO_USE = "en0" # <-- CHANGE THIS to your actual interface
-
-    # Initialize the database and create tables
-    init_db()
-    print("Database initialized.")
-
-    try:
-        # Create the main task for the packet engine, passing the interface
-        main_task = asyncio.create_task(main_engine(interface=INTERFACE_TO_USE))
-        await main_task
-    except asyncio.CancelledError:
-        # This is expected during a graceful shutdown.
-        print("Main application task was cancelled.")
-
-if __name__ == "__main__":
-    # This is the main entry point for the application.
-    # It sets up the asyncio event loop and handles graceful shutdown on Ctrl+C.
-    
-    # You MUST run this with sudo, e.g., `sudo python3 main.py`
-    
     # Clean up previous database file for a fresh run
     if os.path.exists(DB_FILE):
         os.remove(DB_FILE)
         print(f"Removed existing database file: {DB_FILE}")
 
-    print("Starting the packet analysis tool...")
-    print("Press Ctrl+C to stop.")
+    # Initialize the database and create tables
+    init_db()
+    print("Database initialized.")
+
+    print("Starting the WireShrimp application...")
+    print("Press Ctrl+C or 'q' to quit the app.")
 
     try:
-        asyncio.run(main())
+        app = WireShrimpApp()
+        # Pass the interface to the app. This will be handled in WireShrimpApp.
+        app.interface = interface 
+        app.run()
     except PermissionError:
         print("\n[ERROR] Permission denied to access network interface.")
-        print("Please try running the script with administrator privileges (e.g., using 'sudo').")
+        print("Please try running the command with administrator privileges (e.g., using 'sudo').")
         sys.exit(1)
-    except KeyboardInterrupt:
-        # This is the primary mechanism for stopping the application.
-        # asyncio.run() automatically handles the cancellation of running tasks.
-        print("\nApplication stopped by user. Shutting down gracefully...")
     except Exception as e:
-        print(f"\nAn unexpected error occurred: {e}")
+        print(f"\n[ERROR] An unexpected error occurred: {e}")
+        sys.exit(1)
     finally:
-        # This block will run after the asyncio loop is closed
+        # This block will run after the Textual app exits
         print("\n--- Captured Packets Summary ---")
         if not os.path.exists(DB_FILE):
             print("Database file not found. No packets were likely stored.")
@@ -81,5 +71,8 @@ if __name__ == "__main__":
                     if len(all_packets) > 10:
                         print(f"  ... and {len(all_packets) - 10} more.")
             except Exception as e:
-                print(f"Error reading from database: {e}")
+                print(f"[ERROR] Error reading from database: {e}")
         print("---------------------------------")
+
+if __name__ == "__main__":
+    cli()

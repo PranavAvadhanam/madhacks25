@@ -81,9 +81,8 @@ def prune_database(limit: int = 10000):
             
             # Execute a bulk delete on the subquery
             delete_query = db_session.query(ProcessedPacket).filter(ProcessedPacket.id.in_(subquery))
-            deleted_count = delete_query.delete(synchronize_session=False)
+            delete_query.delete(synchronize_session=False)
             db_session.commit()
-            print(f"--- Pruned {deleted_count} old packets from the database. ---")
 
     finally:
         db_session.close()
@@ -101,7 +100,6 @@ def get_all_packets() -> List[ProcessedPacket]:
     """
     db_session = SessionLocal()
     try:
-        print("Fetching all packets from the database...")
         packets = db_session.query(ProcessedPacket).all()
         return packets
     finally:
