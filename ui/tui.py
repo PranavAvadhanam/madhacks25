@@ -39,7 +39,7 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, view <id>", id="command_input")
+        yield Input(placeholder="Commands: filter <proto>, filter, clear, stop, start, view <id>, quit window (qw)", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -61,6 +61,7 @@ class WireShrimpApp(App):
         if packet:
             self.screen.add_class("dimmed")
             content = f"## Packet ID: {packet.id}\n\n"
+            # content += f"## Friendly name: {packet.}"
             content += f"**Timestamp:** {packet.timestamp}\n"
             content += f"**Source:** {packet.source_ip}\n"
             content += f"**Destination:** {packet.destination_ip}\n"
@@ -108,7 +109,7 @@ class WireShrimpApp(App):
            else:
                print("Usage: view <protocol_name>")
 
-        elif command == "qw":
+        elif command == "qw" or command == "quit window":
            self.action_hide_details()
     
         elif command == "filter":
