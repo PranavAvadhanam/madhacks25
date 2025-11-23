@@ -1,4 +1,4 @@
-# madhacks25 (WireShrimp)
+# WireShrimp
 
 **Team:** Connor, Jack, Niyati, Pranav
 
