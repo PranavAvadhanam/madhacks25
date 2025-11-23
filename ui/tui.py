@@ -99,7 +99,7 @@ class WireShrimpApp(App):
                 print("Packet sniffer stopped.")
         elif command == "start":
             if not self.is_sniffing:
-                self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=True, name="Sniffer")
+                self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
                 self.is_sniffing = True
                 print("Packet sniffer started.")
         elif command == "view":
@@ -114,10 +114,9 @@ class WireShrimpApp(App):
     async def run_sniffer(self) -> None:
         """Worker to run the core packet sniffing engine."""
         try:
-            print("Sniffer worker started.")
             await core_engine(interface=self.interface)
         except asyncio.CancelledError:
-            print("Sniffer worker cancelled by request.")
+            pass # This is expected when stopping the sniffer
         except Exception as e:
             print(f"[ERROR] Sniffer worker failed: {e}")
 
@@ -129,10 +128,8 @@ class WireShrimpApp(App):
         display_limit = 1000
         while self.is_running:
             try:
-                print("UI worker: Attempting to fetch packets...")
                 # Run the synchronous DB call in a thread
                 all_packets = await asyncio.to_thread(get_all_packets)
-                print(f"UI worker: Fetched {len(all_packets)} packets.")
                 
                 # We want the most recent packets.
                 # Get the last `display_limit` packets, then reverse to have newest first.

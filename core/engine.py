@@ -204,9 +204,6 @@ async def main_engine(interface: str | None = None):
     local_ip = get_local_ip()
     bpf_filter = f"host {local_ip}"
 
-    print(f"Sniffer started on interface: {interface or 'default'}")
-    print(f"Applying BPF filter to capture traffic for host: {local_ip}")
-
     sniffer = AsyncSniffer(
         iface=interface,
         prn=packet_callback(packet_queue, loop),
@@ -224,16 +221,14 @@ async def main_engine(interface: str | None = None):
     try:
         await asyncio.gather(*tasks)
     except asyncio.CancelledError:
-        print("\nReceived stop signal.")
+        # This is expected when the sniffer is stopped.
+        pass
     finally:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-
-        print("Stopping sniffer...")
         sniffer.stop()
-        await asyncio.sleep(0.5)
-        print("Sniffer stopped.")
+
 
 
 if __name__ == "__main__":
