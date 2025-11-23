@@ -5,9 +5,9 @@ from textual.widgets import Header, Footer, DataTable, Input
 from textual.containers import Container
 from textual import on
 
-from textual.widgets import Header, Footer, DataTable, Input
+from textual.widgets import Header, Footer, DataTable, Input, Static
 
-from database import get_all_packets
+from database import get_all_packets, get_packet_by_id
 from core.engine import main_engine as core_engine
 
 class WireShrimpApp(App):
@@ -19,6 +19,7 @@ class WireShrimpApp(App):
     BINDINGS = [
         ("d", "toggle_dark", "Toggle dark mode"),
         ("q", "quit", "Quit App"),
+        ("escape", "hide_details", "Hide Detail View"),
     ]
 
     # Define the columns for the DataTable
@@ -35,7 +36,9 @@ class WireShrimpApp(App):
         """Create child widgets for the app."""
         yield Header()
         yield DataTable(id="packet_table")
-        yield Input(placeholder="Enter command (e.g., stop, start, quit)", id="command_input")
+        with Container(id="detail_view", classes="hidden"):
+            yield Static(id="detail_content")
+        yield Input(placeholder="Enter command (e.g., stop, start, quit, view <id>)", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -48,12 +51,41 @@ class WireShrimpApp(App):
         self.update_table_worker = self.run_worker(self.update_packet_table, exclusive=False, name="TableUpdater")
         self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
     
+    async def show_packet_details(self, packet_id: int):
+        """Fetch packet details and show them."""
+        packet = await asyncio.to_thread(get_packet_by_id, packet_id)
+        detail_view_container = self.query_one("#detail_view")
+        detail_content = self.query_one("#detail_content")
+        if packet:
+            self.screen.add_class("dimmed")
+            content = f"## Packet ID: {packet.id}\n\n"
+            content += f"**Timestamp:** {packet.timestamp}\n"
+            content += f"**Source:** {packet.source_ip}\n"
+            content += f"**Destination:** {packet.destination_ip}\n"
+            content += f"**Protocol:** {packet.protocol_type}\n"
+            content += f"**Service:** {packet.service_name}\n\n"
+            content += f"### Explanation\n{packet.educational_data}"
+            
+            detail_content.update(content)
+            detail_view_container.remove_class("hidden")
+            detail_view_container.add_class("visible")
+            detail_view_container.focus()
+        else:
+            print(f"Packet with ID {packet_id} not found.")
+
+    def action_hide_details(self):
+        """Hide the detail view."""
+        self.screen.remove_class("dimmed")
+        detail_view_container = self.query_one("#detail_view")
+        detail_view_container.remove_class("visible")
+        detail_view_container.add_class("hidden")
 
 
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
         """Handle command input from the user."""
-        command = event.value.lower().strip()
+        command_parts = event.value.strip().lower().split()
+        command = command_parts[0]
         self.query_one(Input).value = ""
         print(f"Command received: '{command}'")
         
@@ -70,6 +102,12 @@ class WireShrimpApp(App):
                 self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=True, name="Sniffer")
                 self.is_sniffing = True
                 print("Packet sniffer started.")
+        elif command == "view":
+            if len(command_parts) > 1 and command_parts[1].isdigit():
+                packet_id = int(command_parts[1])
+                await self.show_packet_details(packet_id)
+            else:
+                print("Usage: view <packet_id>")
         else:
             print(f"Unknown command: '{command}'")
 

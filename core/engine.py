@@ -6,6 +6,7 @@ from scapy.all import AsyncSniffer
 from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
 from database.db import bulk_insert_processed_packets_async, prune_database_async
+from core.explanation_engine import get_packet_explanation
 
 Packet = Dict[str, Any]
 knownIps = []
@@ -66,6 +67,8 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
 
     length = len(pkt) if pkt is not None else 0
 
+    explanation = get_packet_explanation(pkt)
+
     return {
         "time": ts,
         "src": src,
@@ -74,10 +77,10 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         "length": length,
         "raw_packet": bytes(pkt),
         "link_type": link_type,
-        "service_name": "Unknown",
+        "service_name": explanation["service_name"],
         "traffic_direction": traffic_direction,
-        "friendly_summary": "No summary available.",
-        "educational_data": "{}",
+        "friendly_summary": explanation["friendly_summary"],
+        "educational_data": explanation["educational_data"],
     }
 
 

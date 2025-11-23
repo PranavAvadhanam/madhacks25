@@ -3,21 +3,21 @@
 Screen {
     background: #1e1e1e;
     color: #cccccc;
-    layout: vertical;
+    layout: grid;
+    grid-size: 1 1;
+    grid-gutter: 0;
 
     /* Scrollbar Styling */
-    scrollbar-size-vertical: 1;
+    scrollbar-size-vertical: 0;
     scrollbar-size-horizontal: 0;
-    scrollbar-background: red;
-    scrollbar-background-active: #4a4a4a;
-    scrollbar-background-hover: #4a4a4a;
-    scrollbar-color: #707070;
-    scrollbar-color-active: #aaaaaa;
-    scrollbar-color-hover: #808080;
-    scrollbar-corner-color: red;
+}
+
+Screen.dimmed {
+    background: #1e1e1e 50%;
 }
 
 Header {
+    layer: main;
     dock: top;
     height: 1;
     background: #282828;
@@ -26,6 +26,7 @@ Header {
 }
 
 Footer {
+    layer: main;
     dock: bottom;
     height: 0;
     background: #282828;
@@ -34,29 +35,18 @@ Footer {
 }
 
 #packet_table {
+    layer: main;
     height: 1fr;
     border: heavy #404040;
     overflow-x: scroll;
-    background: #2d2d2d;
-    color: #cccccc;
-
-    scrollbar-size-vertical: 1;
     scrollbar-size-horizontal: 0;
-    scrollbar-background: transparent;
-    scrollbar-background-active: transparent;
-    scrollbar-background-hover: transparent;
-    scrollbar-color: #707070;
-    scrollbar-color-active: #aaaaaa;
-    scrollbar-color-hover: #808080;
-    scrollbar-corner-color: transparent;
-}
-
-#packet_table:focus {
+    scrollbar-size-vertical: 1;
     background: #2d2d2d;
     color: #cccccc;
 }
 
 #command_input {
+    layer: main;
     dock: bottom;
     height: 3;
     background: #2d2d2d;
@@ -65,6 +55,17 @@ Footer {
     padding: 0 1;
 }
 
-#command_input:focus {
-    border: tall white;
+#detail_view {
+    layer: overlay;
+    display: none;
+    align: center middle;
+    background: #282828;
+    border: wide #505050;
+    padding: 0;
+    width: 80%;
+    height: 80%;
+}
+
+#detail_view.visible {
+    display: block;
 }

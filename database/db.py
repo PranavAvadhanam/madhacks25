@@ -105,6 +105,17 @@ def get_all_packets() -> List[ProcessedPacket]:
     finally:
         db_session.close()
 
+def get_packet_by_id(packet_id: int) -> ProcessedPacket | None:
+    """
+    Retrieves a single packet by its ID.
+    """
+    db_session = SessionLocal()
+    try:
+        packet = db_session.query(ProcessedPacket).filter(ProcessedPacket.id == packet_id).first()
+        return packet
+    finally:
+        db_session.close()
+
 if __name__ == '__main__':
     # A simple script to initialize the DB and test inserting/reading data.
     init_db()
