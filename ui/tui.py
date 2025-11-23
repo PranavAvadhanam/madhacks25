@@ -39,7 +39,7 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter, clear, stop, start, view <id>, quit window (qw)", id="command_input")
+        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, view <id>", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -52,7 +52,7 @@ class WireShrimpApp(App):
         print("App mounted. Starting background workers...")
         self.update_table_worker = self.run_worker(self.update_packet_table, exclusive=False, name="TableUpdater")
         self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
-    
+
     async def show_packet_details(self, packet_id: int):
         """Fetch packet details and show them."""
         packet = await asyncio.to_thread(get_packet_by_id, packet_id)
@@ -61,7 +61,6 @@ class WireShrimpApp(App):
         if packet:
             self.screen.add_class("dimmed")
             content = f"## Packet ID: {packet.id}\n\n"
-            # content += f"## Friendly name: {packet.}"
             content += f"**Timestamp:** {packet.timestamp}\n"
             content += f"**Source:** {packet.source_ip}\n"
             content += f"**Destination:** {packet.destination_ip}\n"
@@ -70,18 +69,19 @@ class WireShrimpApp(App):
             content += f"### Explanation\n{packet.educational_data}"
             
             detail_content.update(content)
+            detail_view_container.border_title = "Packet Info"
             detail_view_container.remove_class("hidden")
             detail_view_container.add_class("visible")
             detail_view_container.focus()
         else:
             print(f"Packet with ID {packet_id} not found.")
-
+    
     def action_hide_details(self):
         """Hide the detail view."""
         self.screen.remove_class("dimmed")
-        self.screen.remove_class("dimmed")
-        self.query_one("#detail_view").remove_class("visible")
-        self.query_one("#detail_view").add_class("hidden")
+        detail_view_container = self.query_one("#detail_view")
+        detail_view_container.remove_class("visible")
+        detail_view_container.add_class("hidden")
 
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
@@ -102,16 +102,14 @@ class WireShrimpApp(App):
             if self.is_sniffing:
                 self.sniffer_worker.cancel()
                 self.is_sniffing = False
+                self.notify("Packet sniffer stopped.")
 
-        elif command == "define":
-           if len(command_parts) > 1 and command_parts[1].isdigit():
-               pass
-           else:
-               print("Usage: view <protocol_name>")
+        elif command == "start":
+            if not self.is_sniffing:
+                self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
+                self.is_sniffing = True
+                self.notify("Packet sniffer started.")
 
-        elif command == "qw" or command == "quit window":
-           self.action_hide_details()
-    
         elif command == "filter":
             # Handle 'filter clear' or 'filter <protocol>'
             if len(command_parts) > 1:
