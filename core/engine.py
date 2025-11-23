@@ -7,10 +7,10 @@ from scapy.layers.inet6 import IPv6
 from database.db import bulk_insert_processed_packets_async, prune_database_async
 
 Packet = Dict[str, Any]
+knownIps = []
 
 
 def _extract_packet_fields(pkt) -> Dict[str, Any]:
-    """Try to extract common fields from a Scapy packet in a robust way."""
     ts = getattr(pkt, "time", None)
 
     src = dst = None
@@ -24,6 +24,15 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         src = getattr(pkt, "src", None)
         dst = getattr(pkt, "dst", None)
 
+    # Detect starting layer
+    first_layer = pkt.firstlayer().name
+    if first_layer == "IP":
+        link_type = "IP"
+    elif first_layer == "IPv6":
+        link_type = "IPv6"
+    else:
+        link_type = "Ether"
+
     proto = None
     if TCP in pkt:
         proto = "TCP"
@@ -35,10 +44,6 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         proto = pkt.name if hasattr(pkt, "name") else None
 
     length = len(pkt) if pkt is not None else 0
-    try:
-        info = pkt.summary()
-    except Exception:
-        info = str(pkt)
 
     return {
         "time": ts,
@@ -46,7 +51,8 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         "dst": dst,
         "protocol": proto,
         "length": length,
-        "info": info,
+        "raw_packet": bytes(pkt),
+        "link_type": link_type,
     }
 
 
@@ -85,15 +91,13 @@ def packet_callback(packet_queue: asyncio.Queue, loop: asyncio.AbstractEventLoop
 
 
 def process_packet(packet: Packet) -> Dict[str, Any]:
-    """Processes a raw packet dict to make it digestible for the use case."""
     return {
         "source_ip": packet.get("src"),
         "destination_ip": packet.get("dst"),
         "protocol_type": packet.get("protocol"),
-        "summary": packet.get("info"),
+        "raw_packet": packet.get("raw_packet"),
+        "link_type": packet.get("link_type"),
         "timestamp": packet.get("time"),
-        "length": packet.get("length"),
-        "id": packet.get("id"),
     }
 
 
