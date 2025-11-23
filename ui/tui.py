@@ -39,6 +39,8 @@ class WireShrimpApp(App):
         yield DataTable(id="packet_table")
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
+        with Container(id="define", classes="hidden"):
+            yield Markdown(id="define_content")
         # Updated placeholder to include filter command
         yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, view <id>", id="command_input")
         yield Footer()
@@ -153,6 +155,85 @@ class WireShrimpApp(App):
         detail_view_container.add_class("visible")
         detail_view_container.focus()
 
+    async def explain_protocol(self, proto_key: str) -> None:
+        """Provide an explanation for a given protocol."""
+        PROTOCOL_EXPLANATIONS = {
+            'TCP': {
+                'emoji': '🔗',
+                'name': 'TCP (Transmission Control Protocol)',
+                'description': 'A reliable, connection-oriented protocol that ensures data arrives in order.',
+                'use_case': 'Used for: Web browsing, email, file transfers - anything that needs reliability',
+                'analogy': '📞 Like a phone call: You establish a connection, talk, and hang up when done.'
+                },
+            'UDP': {
+                'emoji': '📡',
+                'name': 'UDP (User Datagram Protocol)',
+                'description': 'A fast, connectionless protocol that sends data without confirmation.',
+                'use_case': 'Used for: Streaming, gaming, DNS - anything that prioritizes speed over reliability',
+                'analogy': '📮 Like a postcard: You send it and hope it arrives, but you get no confirmation.'
+                },
+            'HTTP': {
+                'emoji': '🌐',
+                'name': 'HTTP (HyperText Transfer Protocol)',
+                'description': 'Unencrypted web traffic protocol.',
+                'use_case': 'Used for: Basic web browsing (WARNING: Not secure!)',
+                'analogy': '📬 Like sending a postcard: Anyone can read it along the way.'
+                },
+            'HTTPS': {
+                'emoji': '🔒',
+                'name': 'HTTPS (Secure HTTP)',
+                'description': 'Encrypted web traffic that keeps your data private.',
+                'use_case': 'Used for: Secure websites (banking, shopping, social media)',
+                'analogy': '🔐 Like sending a locked box instead of an open letter.'
+                },
+            'DNS': {
+                'emoji': '📖',
+                'name': 'DNS (Domain Name System)',
+                'description': 'Converts human-readable domain names to IP addresses.',
+                'use_case': 'Used for: Every time you type a website name in your browser',
+                'analogy': '📇 Like a phone book: You look up "Google" and get its phone number (IP address).'
+                },
+            'ICMP': {
+                'emoji': '🏓',
+                'name': 'ICMP (Internet Control Message Protocol)',
+                'description': 'Used for network diagnostics and error reporting.',
+                'use_case': 'Used for: Ping command, traceroute, network troubleshooting',
+                'analogy': '🏓 Like a ping pong ball: Send it out and see if it bounces back.'
+                },
+            'ARP': {
+                'emoji': '🗺️',
+                'name': 'ARP (Address Resolution Protocol)',
+                'description': 'Maps IP addresses to physical MAC addresses on local networks.',
+                'use_case': 'Used for: Local network communication',
+                'analogy': '🗺️ Like asking "Who lives at this address?" on your street.'
+                },
+            'SSH': {
+                'emoji': '🔐',
+                'name': 'SSH (Secure Shell)',
+                'description': 'Encrypted protocol for secure remote access to computers.',
+                'use_case': 'Used for: Remote server administration, secure file transfers',
+                'analogy': '🚪 Like having a secure key to remotely control another computer.'
+                },
+            }
+        explanation = PROTOCOL_EXPLANATIONS.get(proto_key)
+        if explanation:
+            define_container = self.query_one("#define")
+
+            define_content = self.query_one("#define_content", Markdown)
+            self.screen.add_class("dimmed")
+
+            text = f"{explanation['emoji']} **{explanation['name']}**\n\n"
+            text += f"**Description:** {explanation['description']}\n\n"
+            text += f"**Use Case:** {explanation['use_case']}\n\n"
+            text += f"**Analogy:** {explanation['analogy']}\n"
+
+            define_content.update(text)
+            define_container.remove_class("hidden")
+            define_container.add_class("visible")
+            define_container.focus()
+        else:
+            print(f"No explanation found for protocol: {proto_key}")
+
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
         """Handle command input from the user."""
@@ -199,6 +280,13 @@ class WireShrimpApp(App):
                 await self.show_packet_details(packet_id)
             else:
                 self.notify("Usage: view <packet_id>")
+
+        elif command == "define":
+           if len(command_parts) > 1:
+                proto_key = command_parts[1].upper()
+                await self.explain_protocol(proto_key) 
+           else:
+               self.notify("Usage: define <protocol_name>")
 
         elif command == "help":
             await self.show_help_details()
