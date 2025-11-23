@@ -26,12 +26,31 @@ Packet = Dict[str, Any]
     return random.choice(fallback) + " Badger"
 
 '''
-ADJECTIVE_CACHE = ["Swift", "Bright", "Noble", "Strong", "Wise", 
-                   "Bold", "Clever", "Keen", "Brave", "Quick"]
+ADJECTIVE_CACHE = [
+    "Swift", "Bright", "Noble", "Strong", "Wise", 
+    "Bold", "Clever", "Keen", "Brave", "Quick",
+    "Radiant", "Mighty", "Graceful", "Vibrant", "Stellar",
+    "Brilliant", "Valiant", "Daring", "Nimble", "Fearless",
+    "Gleaming", "Majestic", "Spirited", "Lively", "Dazzling",
+    "Gallant", "Intrepid", "Zealous", "Glorious", "Luminous",
+    "Serene", "Tranquil", "Peaceful", "Calm", "Gentle",
+    "Cheerful", "Joyful", "Merry", "Sunny", "Happy",
+    "Elegant", "Refined", "Polished", "Pristine", "Pure",
+    "Loyal", "True", "Faithful", "Steadfast", "Devoted",
+    "Astute", "Witty", "Sharp", "Savvy", "Canny",
+    "Cosmic", "Mystic", "Ancient", "Eternal", "Timeless",
+    "Golden", "Silver", "Crystal", "Diamond", "Emerald",
+    "Thunder", "Lightning", "Storm", "Blaze", "Frost",
+    "Azure", "Crimson", "Amber", "Jade", "Onyx"
+]
 
 def generate_source_random():
     """Fast name generation using pre-defined adjectives."""
-    return random.choice(ADJECTIVE_CACHE) + " Badger"
+    if (len(ADJECTIVE_CACHE) == 0):
+        return "New Badger"
+
+    adj = ADJECTIVE_CACHE.pop(random.randrange(len(ADJECTIVE_CACHE)))
+    return adj + " Badger"
 
 knownIps = {}
 
