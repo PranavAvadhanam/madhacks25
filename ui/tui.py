@@ -238,7 +238,7 @@ class WireShrimpApp(App):
     async def update_packet_table(self) -> None:
         """Periodically queries the database and redraws the entire table."""
         # Add a small initial delay to give the sniffer time to start up
-        await asyncio.sleep(.3)
+        await asyncio.sleep(0.3)
         
         display_limit = 1000
         while self.is_running:
@@ -247,25 +247,24 @@ class WireShrimpApp(App):
                 all_packets = await asyncio.to_thread(get_all_packets)
                 
                 # --- FILTERING LOGIC ---
-                # Filter packets BEFORE slicing if a filter is active
                 if self.current_filter:
-            
                     if "." in self.current_filter or "/" in self.current_filter:
+                        # IP Filtering
                         filtered_packets = [
                             p for p in all_packets 
                             if p.source_ip == self.current_filter or p.destination_ip == self.current_filter
                         ]
-                        # Update the header sub-title to show filter status
                         self.sub_title = f"Filter: {self.current_filter} ({len(filtered_packets)} pkts)"
-                        packets_to_display = filtered_packets[-display_limit:][::-1]
-                    elif self.current_filter:
+                    else:
+                        # Protocol Filtering
                         filtered_packets = [
                             p for p in all_packets 
                             if p.protocol_type and self.current_filter.lower() in p.protocol_type.lower()
                         ]
-                        # Update the header sub-title to show filter status
                         self.sub_title = f"Filter: {self.current_filter.upper()} ({len(filtered_packets)} pkts)"
-                        packets_to_display = filtered_packets[-display_limit:][::-1]
+                    
+                    # Apply limit after filtering
+                    packets_to_display = filtered_packets[-display_limit:][::-1]
                 else:
                     self.sub_title = "Live Capture"
                     packets_to_display = all_packets[-display_limit:][::-1]
@@ -273,18 +272,16 @@ class WireShrimpApp(App):
 
                 table = self.query_one(DataTable)
 
-                # Preserve current scroll position and row count
-                try:
-                    old_row_count = table.row_count
-                    old_scroll_y = int(table.scroll_y)
-                    old_scroll_x = int(table.scroll_x)
-                except Exception:
-                    old_row_count = 0
-                    old_scroll_y = 0
+                # Preserve current scroll position
+                old_scroll_y = int(table.scroll_y)
+                old_scroll_x = int(table.scroll_x)
+                
+                # Capture current state to decide on auto-scroll
+                is_at_top = old_scroll_y == 0
 
                 # Clear and update rows.
                 table.clear()
-                table.scroll_y = old_scroll_y
+                
                 rows = []
                 
                 try:
@@ -294,32 +291,21 @@ class WireShrimpApp(App):
 
                 # Fixed approximate widths for columns (characters)
                 fixed_widths = {
-                    "ID": 6,
-                    "Time": 19,
-                    "Src": 15,
-                    "Dst": 15,
-                    "Protocol": 8,
-                    "Service": 10,
-                    "Direction": 10,
+                    "ID": 6, "Time": 19, "Src": 15, "Dst": 15, 
+                    "Protocol": 8, "Service": 10, "Direction": 10,
                 }
                 fixed_total = sum(fixed_widths.values()) + (len(self.PACKET_TABLE_COLUMNS) - 1) * 3
-                # leave at least 10 chars for Summary
                 max_summary = max(40, total_width - fixed_total)
 
                 def truncate(text: str, limit: int) -> str:
-                    if text is None:
-                        return ""
+                    if text is None: return ""
                     s = str(text)
                     return s if len(s) <= limit else s[: max(0, limit - 1)] + "…"
 
                 # Protocol color mapping
                 protocol_colors = {
-                    "ARP": "#83C092",
-                    "UDP": "#DBBC7F",  # Yellow
-                    "ICMP": "#E67E80", # Red
-                    "TCP": "#7FBBB3", # Cyan (from accents list)
-                    "DNS": "#D699B6", # Magenta (from accents list)
-                    # Add more protocols and colors as needed
+                    "ARP": "#83C092", "UDP": "#DBBC7F", 
+                    "ICMP": "#E67E80", "TCP": "#7FBBB3", "DNS": "#D699B6"
                 }
 
                 for pkt in packets_to_display:
@@ -331,37 +317,46 @@ class WireShrimpApp(App):
                     summary = truncate(pkt.friendly_summary, max_summary)
                     src = truncate(pkt.source_ip, fixed_widths["Src"])
                     dst = truncate(pkt.destination_ip, fixed_widths["Dst"])
+                    
                     if self.FRIENDLY_STATE:
                         src = truncate(pkt.friendly_src, fixed_widths["Src"])
                         dst = truncate(pkt.friendly_dst, fixed_widths["Dst"])
-                        
-                    proto = truncate(pkt.protocol_type, fixed_widths["Protocol"])
+                    
+                    # --- FIX START: Define proto_text before using it ---
+                    # Ensure we handle NoneTypes gracefully
+                    proto_raw = pkt.protocol_type if pkt.protocol_type else "N/A"
+                    
+                    color = protocol_colors.get(proto_raw.upper(), "#83C092")
+                    colored_proto = f"[{color}]{truncate(proto_raw, fixed_widths['Protocol'])}[/]"
+                    # --- FIX END ---
+
                     service = truncate(pkt.service_name, fixed_widths["Service"])
                     direction = truncate(pkt.traffic_direction, fixed_widths["Direction"])
-                    rows.append((pkt.id, time_ago, src, dst, colored_proto, service, direction, summary))
+                    
+                    # Add row with key=pkt.id to help Textual track items if you switch to differential updates later
+                    rows.append((str(pkt.id), time_ago, src, dst, colored_proto, service, direction, summary))
                 
                 if rows:
                     table.add_rows(rows)
 
-                    new_row_count = table.row_count
-                    # Logic to maintain scroll position specifically for live updating lists
-                    if old_scroll_y <= 0:
-                        # Auto-scroll to top (newest) when user is at top.
-                        table.scroll_home(x=old_scroll_x, y=0, animate=False)
+                    # Logic to maintain scroll position
+                    if is_at_top:
+                        # If user was at the top, keep them at the top (newest items)
+                        table.scroll_to(x=old_scroll_x, y=0, animate=False)
                     else:
-                        # Attempt to stabilize view
-                        added = max(0, new_row_count - old_row_count)
-                        try:
-                            table.scroll_to(old_scroll_x, y=old_scroll_y + added, immediate=True, animate=False)
-                        except Exception:
-                            pass
+                        # If user was scrolled down, try to keep them there
+                        # Note: Because we cleared the table, strict index restoration is tricky.
+                        # This simply puts them back to the same visual offset.
+                        table.scroll_to(x=old_scroll_x, y=old_scroll_y, animate=False)
 
             except Exception as e:
+                # Use self.notify so you can see errors in the UI
+                # self.notify(f"Table Update Error: {e}", severity="error")
                 print(f"[ERROR] Failed to update table: {e}")
 
             # Wait before the next refresh
-            await asyncio.sleep(.2)
-    
+            await asyncio.sleep(0.5) # Increased slightly to reduce flickering
+        
     def action_quit(self) -> None:
         """An action to quit the app."""
         self.sniffer_worker.cancel()
