@@ -14,6 +14,7 @@ class WireShrimpApp(App):
     """A Textual app for live packet sniffing."""
 
     ENABLE_COMMAND_PALETTE = False
+    FRIENDLY_STATE = False
 
     CSS_PATH = "tui.css"
     BINDINGS = [
@@ -40,7 +41,7 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, quit window (qw), view <id>", id="command_input")
+        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, friend, quit window (qw), view <id>", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -176,6 +177,14 @@ class WireShrimpApp(App):
                 self.is_sniffing = False
                 self.notify("Packet sniffer stopped.")
 
+        elif command == "friend":
+            if self.FRIENDLY_STATE:
+                self.notify("Friendly mode deactivated :|")
+                self.FRIENDLY_STATE = False
+            else:
+                self.notify("Friendly mode activated :)")
+                self.FRIENDLY_STATE = True
+        
 
         elif command == "start":
             if not self.is_sniffing:
@@ -299,6 +308,10 @@ class WireShrimpApp(App):
                     summary = truncate(pkt.friendly_summary, max_summary)
                     src = truncate(pkt.source_ip, fixed_widths["Src"])
                     dst = truncate(pkt.destination_ip, fixed_widths["Dst"])
+                    if self.FRIENDLY_STATE:
+                        src = truncate(pkt.friendly_src, fixed_widths["Src"])
+                        dst = truncate(pkt.friendly_dst, fixed_widths["Dst"])
+                        
                     proto = truncate(pkt.protocol_type, fixed_widths["Protocol"])
                     service = truncate(pkt.service_name, fixed_widths["Service"])
                     direction = truncate(pkt.traffic_direction, fixed_widths["Direction"])
