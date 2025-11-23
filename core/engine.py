@@ -7,9 +7,53 @@ from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
 from database.db import bulk_insert_processed_packets_async, prune_database_async
 from core.explanation_engine import get_packet_explanation
+import textblob
+import random
 
 Packet = Dict[str, Any]
-knownIps = []
+'''def generate_source_random():
+    r = textblob.WordList(textblob.corpora.words.words())
+    attempts = 0
+    while (attempts <= 20):
+        word = r.word(include_parts_of_speech=["adjectives"])
+
+        if (textblob.TextBlob(word).sentiment.polarity > 0.5):
+            return word.capitalize() + " Badger"
+        else:
+            attempts +=1
+    # Fallback to pre-made list if nothing found
+    fallback = ["Swift", "Bright", "Noble", "Strong", "Wise"]
+    return random.choice(fallback) + " Badger"
+
+'''
+ADJECTIVE_CACHE = [
+    "Swift", "Bright", "Noble", "Strong", "Wise", 
+    "Bold", "Clever", "Keen", "Brave", "Quick",
+    "Radiant", "Mighty", "Graceful", "Vibrant", "Stellar",
+    "Brilliant", "Valiant", "Daring", "Nimble", "Fearless",
+    "Gleaming", "Majestic", "Spirited", "Lively", "Dazzling",
+    "Gallant", "Intrepid", "Zealous", "Glorious", "Luminous",
+    "Serene", "Tranquil", "Peaceful", "Calm", "Gentle",
+    "Cheerful", "Joyful", "Merry", "Sunny", "Happy",
+    "Elegant", "Refined", "Polished", "Pristine", "Pure",
+    "Loyal", "True", "Faithful", "Steadfast", "Devoted",
+    "Astute", "Witty", "Sharp", "Savvy", "Canny",
+    "Cosmic", "Mystic", "Ancient", "Eternal", "Timeless",
+    "Golden", "Silver", "Crystal", "Diamond", "Emerald",
+    "Thunder", "Lightning", "Storm", "Blaze", "Frost",
+    "Azure", "Crimson", "Amber", "Jade", "Onyx"
+]
+
+def generate_source_random():
+    """Fast name generation using pre-defined adjectives."""
+    if (len(ADJECTIVE_CACHE) == 0):
+        return "New Badger"
+
+    adj = ADJECTIVE_CACHE.pop(random.randrange(len(ADJECTIVE_CACHE)))
+    return adj + " Badger"
+
+knownIps = {}
+
 
 # Mapping of IP protocol numbers to their string representations
 IP_PROTOCOL_MAP = {
@@ -43,6 +87,15 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         dst = getattr(pkt, "dst", None)
 
     local_ip = get_local_ip()
+    knownIps[local_ip] = "You"
+
+    if not src in knownIps:
+        knownIps[src] = generate_source_random()
+        print(f"New known IP added: {src} as {knownIps[src]}")  
+    if not dst in knownIps:
+        knownIps[dst] = generate_source_random()
+        print(f"New known IP added: {dst} as {knownIps[dst]}") 
+
     traffic_direction = "Upload" if src == local_ip else "Download"
 
     # Detect starting layer
@@ -81,6 +134,8 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         "traffic_direction": traffic_direction,
         "friendly_summary": explanation["friendly_summary"],
         "educational_data": explanation["educational_data"],
+        "friendly_src": knownIps[src],
+        "friendly_dst": knownIps[dst],
     }
 
 
@@ -130,6 +185,8 @@ def process_packet(packet: Packet) -> Dict[str, Any]:
         "traffic_direction": packet.get("traffic_direction"),
         "friendly_summary": packet.get("friendly_summary"),
         "educational_data": packet.get("educational_data"),
+        "friendly_src": packet.get("friendly_src"),
+        "friendly_dst": packet.get("friendly_dst"),
     }
 
 

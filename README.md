@@ -1,4 +1,4 @@
-# madhacks25 (WireShrimp ?)
+# WireShrimp
 
 **Team:** Connor, Jack, Niyati, Pranav
 
@@ -14,10 +14,7 @@ We are building a Command-Line Interface (CLI) tool that serves as a "stepping s
 
 *   **Live Packet Capture:** Easily start and stop capturing packets on a selected network interface.
 *   **Simplified Packet View:** Instead of a raw data dump, packets are presented in a clean, human-readable summary, highlighting the most important information (IP addresses, ports, protocols).
-*   **User-Friendly Filtering:** Apply simple, intuitive filters based on common criteria like IP address, port number, or protocol (e.g., `http`, `dns`, `tcp`).
-*   **Real-Time Statistics:** View a live dashboard of basic network statistics, such as total packets captured, protocol distribution (e.g., 60% TCP, 30% UDP, 10% Other), and top conversations.
-*   **Conversation View:** Group packets into conversations (e.g., a complete TCP handshake and data transfer) to understand the flow of communication between two hosts.
-*   **Educational Mode:** An interactive "Packet Explainer" that allows users to select a packet and get a clear explanation of its different headers and fields (e.g., "This is the source IP address...").
+*   **Educational Mode:** An interactive "Packet Explainer" that allows users to select a packet and get a clear explanation of its different headers and fields (e.g., "Assigning Each IP an English name for better readability").
 
 ## Target Audience
 
@@ -41,3 +38,24 @@ During development, we encountered a critical performance bottleneck. The initia
     *   A timeout is reached (e.g., 2 seconds), ensuring data is saved even during periods of low traffic.
 
 This approach dramatically reduces database overhead and allows the application to keep up with high-traffic networks, ensuring reliable data capture.
+
+# Getting Started
+Installation
+
+Clone or download the repository
+
+```
+git clone <repository-url>
+cd WireShrimp
+```
+Or download and extract the ZIP file, then navigate to the project directory.
+
+Install required dependencies
+
+```pip install -r requirements.txt```
+
+Run WireShrimp
+
+```python main.py run```
+Note: On Linux/Mac, you may need to run with elevated privileges:
+```sudo python main.py run```

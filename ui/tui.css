@@ -1,21 +1,28 @@
-/* ui/tui.css */
+/* This CSS defines the layout and aesthetics for the Textual app */
 
 Screen {
+    align: center middle;
     layer: main;
-    background: #1e1e1e;
+    background: transparent;
     color: #cccccc;
-    layout: vertical;
+    layout: grid;
 
     /* Scrollbar Styling */
     scrollbar-size-vertical: 0;
     scrollbar-size-horizontal: 0;
 }
 
+/* FIX: Removes height restriction (which caused the border) and applies a 
+        translucent black background for a proper dimming effect. */
 Screen.dimmed {
-    background: #1e1e1e 50%;
+    layout: grid;
+    /* Use a translucent black background to dim the main view */
+    background: #000000aa; /* Black with approx 66% opacity */
+    /* Remove height and align properties which were incorrectly framing the screen */
 }
 
 Header {
+    align: center middle;
     layer: main;
     dock: top;
     height: 1;
@@ -25,6 +32,7 @@ Header {
 }
 
 Footer {
+    align: center middle;
     layer: main;
     dock: bottom;
     height: 0;
@@ -34,9 +42,10 @@ Footer {
 }
 
 #packet_table {
+    align: center middle;
     layer: main;
     height: 1fr;
-    border: heavy #404040;
+    border: tall #404040;
     overflow-x: scroll;
     scrollbar-size-horizontal: 0;
     background: #2d2d2d;
@@ -44,28 +53,46 @@ Footer {
 }
 
 #command_input {
+    align: center middle;
     layer: main;
     dock: bottom;
     height: 3;
     background: #2d2d2d;
     color: #ffffff;
-    border: tall white;
+    border: round white;
     padding: 0 1;
 }
 
 #detail_view {
+    align: center middle;
+    content-align: center middle;
     layer: overlay;
     display: none;
 
-    background: #282828;
-    border: wide #505050;
-    padding: 1;
+    /* REVISED STYLES: Using Gruvbox colors for consistency */
+    background: #282828; /* Dark background for the modal */
+    border: none;
+    color: orange; /* Gruvbox light text */
+    padding: 1 3;
+    box-sizing: border-box;
+    
+    /* Positioning and Sizing */
     width: 80%;
-    height: 80%;
+    height: 70%;
     max-width: 100;
     max-height: 30;
+    
+    /* Ensure content scrolls if too long */
+    overflow-y: scroll;
+    scrollbar-size-vertical: 0;
+    scrollbar-size-horizontal: 0;
+    border-title-align: center;
 }
 
 #detail_view.visible {
+    /* Use consistent border and display setting */
+    border: double orange;
+    margin: 0;
     display: block;
+    box-sizing: border-box;
 }
