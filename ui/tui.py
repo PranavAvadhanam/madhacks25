@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable, Input, Markdown
+from textual.theme import Theme
 from textual.containers import Container
 from textual import on
 import json
@@ -9,6 +10,26 @@ import json
 # Assumed imports based on your snippet
 from database import get_all_packets, get_packet_by_id
 from core.engine import main_engine as core_engine
+
+everforest_theme = Theme(
+    name="everforest",
+    primary="#A7C080",  # Green from accents                                         
+    secondary="#E67E80", # Red from accents                                          
+    accent="#DBBC7F",   # Yellow/brown from accents                                  
+    foreground="#D3C6AA", # Default foreground                                       
+    background="#1E2326", # Hard dark background                                     
+    success="#A7C080",  # Green from accents                                         
+    warning="#E69875",  # Orange from accents                                        
+    error="#E67E80",    # Red from accents                                           
+    surface="#272E33",  # Slightly lighter background                                
+    panel="#2E383C",    # Another slightly lighter background                        
+    dark=True,                                                                       
+    variables={                                                                      
+        "block-cursor-text-style": "none",                                           
+        "footer-key-foreground": "#A7C080",                                          
+        "input-selection-background": "#83C092 35%", # A green from accents with     
+    },                                                                               
+)
 
 class WireShrimpApp(App):
     """A Textual app for live packet sniffing."""
@@ -29,7 +50,7 @@ class WireShrimpApp(App):
 
     def __init__(self, interface: str | None = None):
         super().__init__()
-        self.interface = interface
+        self.interface = interface        
         self.is_sniffing = True  # Start sniffing by default
         self.current_filter: str | None = None  # Store the active filter
 
@@ -45,9 +66,10 @@ class WireShrimpApp(App):
 
     def on_mount(self) -> None:
         """Called when the app is mounted to the DOM."""
-        self.theme = "gruvbox"
         table = self.query_one(DataTable)
         table.add_columns(*self.PACKET_TABLE_COLUMNS)
+        self.register_theme(everforest_theme)  
+        self.theme = "everforest"
         
         # Start the background workers
         print("App mounted. Starting background workers...")
