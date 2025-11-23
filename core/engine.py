@@ -5,26 +5,6 @@ from scapy.all import AsyncSniffer, IP, IPv6, TCP, UDP
 # This will likely be a dataclass or a simple dictionary
 Packet = Dict[str, Any]
 
-# Buffer storage fallback for when DB is unavailable
-PACKET_STORE: list[Dict[str, Any]] = []
-
-# Try to import async bulk insert from database module
-_db_enabled = False
-_db_bulk_async = None
-try:
-    from database.db import bulk_insert_processed_packets_async, init_db  # type: ignore
-
-    try:
-        init_db()
-        _db_bulk_async = bulk_insert_processed_packets_async
-        _db_enabled = True
-        print("Database batch inserter available; DB batching enabled.")
-    except Exception as e:
-        print(f"Warning: DB init failed ({e}); falling back to in-memory buffer.")
-        _db_enabled = False
-except Exception:
-    _db_enabled = False
-
 
 def _extract_packet_fields(pkt) -> Dict[str, Any]:
     """Try to extract common fields from a Scapy packet in a robust way."""
@@ -126,76 +106,15 @@ async def process_and_store(packet_queue: asyncio.Queue):
     Takes packets from the queue, processes them, and stores them.
     """
     print("Starting packet processor and storer.")
-    # Buffering configuration
-    BUFFER_MAX = 100
-    FLUSH_INTERVAL = 5.0  # seconds
-
-    buffer: list[Dict[str, Any]] = []
-    timer_task: asyncio.Task | None = None
-
-    async def _flush_buffer():
-        nonlocal buffer
-        if not buffer:
-            return
-        batch = buffer
-        buffer = []
-
-        if _db_enabled and _db_bulk_async is not None:
-            try:
-                # call the async bulk insert
-                await _db_bulk_async(batch)
-            except Exception as e:
-                print(f"DB bulk insert failed: {e}; falling back to in-memory storage.")
-                PACKET_STORE.extend(batch)
-        else:
-            # fallback: keep packets in memory
-            PACKET_STORE.extend(batch)
-
-    async def _timer_flush():
-        try:
-            await asyncio.sleep(FLUSH_INTERVAL)
-            await _flush_buffer()
-        except asyncio.CancelledError:
-            # Timer cancelled because we flushed early
-            return
-
-    try:
-        while True:
-            raw_packet = await packet_queue.get()
-            print(f"Processing and storing packet ID: {raw_packet.get('id')}")
-            processed_packet = process_packet(raw_packet)
-
-            buffer.append(processed_packet)
-
-            # start timer when first item arrives
-            if len(buffer) == 1 and (timer_task is None or timer_task.done()):
-                timer_task = asyncio.create_task(_timer_flush())
-
-            # flush immediately when we hit buffer size
-            if len(buffer) >= BUFFER_MAX:
-                # cancel timer and flush
-                if timer_task is not None and not timer_task.done():
-                    timer_task.cancel()
-                    try:
-                        await timer_task
-                    except Exception:
-                        pass
-                    timer_task = None
-                await _flush_buffer()
-
-            print(f"Buffered packet (buffer size={len(buffer)})")
-            packet_queue.task_done()
-    finally:
-        # Ensure any remaining buffered packets are flushed on shutdown
-        if timer_task is not None and not timer_task.done():
-            timer_task.cancel()
-            try:
-                await timer_task
-            except Exception:
-                pass
-        await _flush_buffer()
-        print("Processor shutting down; flushed remaining packets.")
-
+    while True:
+        raw_packet = await packet_queue.get()
+        print(f"Processing and storing packet ID: {raw_packet.get('id')}")
+        processed_packet = process_packet(raw_packet)
+        # TODO: Integrate with the database component to store `processed_packet`.
+        # e.g., from database.db import insert_processed_packet
+        # insert_processed_packet(processed_packet)
+        print(f"Stored processed packet: {processed_packet}")
+        packet_queue.task_done()
 
 
 async def main_engine(interface: str | None = None):
