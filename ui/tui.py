@@ -78,9 +78,9 @@ class WireShrimpApp(App):
     def action_hide_details(self):
         """Hide the detail view."""
         self.screen.remove_class("dimmed")
-        detail_view_container = self.query_one("#detail_view")
-        detail_view_container.remove_class("visible")
-        detail_view_container.add_class("hidden")
+        self.screen.remove_class("dimmed")
+        self.query_one("#detail_view").remove_class("visible")
+        self.query_one("#detail_view").add_class("hidden")
 
     @on(Input.Submitted, "#command_input")
     async def handle_command(self, event: Input.Submitted) -> None:
@@ -102,11 +102,15 @@ class WireShrimpApp(App):
                 self.sniffer_worker.cancel()
                 self.is_sniffing = False
 
-        elif command == "start":
-            if not self.is_sniffing:
-                self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
-                self.is_sniffing = True
+        elif command == "define":
+           if len(command_parts) > 1 and command_parts[1].isdigit():
+               pass
+           else:
+               print("Usage: view <protocol_name>")
 
+        elif command == "qw":
+           self.action_hide_details()
+    
         elif command == "filter":
             # Handle 'filter clear' or 'filter <protocol>'
             if len(command_parts) > 1:
