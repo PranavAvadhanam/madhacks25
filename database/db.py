@@ -64,7 +64,7 @@ async def bulk_insert_processed_packets_async(packets: List[Dict[str, Any]]):
     """
     await asyncio.to_thread(bulk_insert_processed_packets, packets)
 
-def prune_database(limit: int = 10000):
+def prune_database(limit: int = 100000):
     """
     Checks the number of rows in the database and deletes the oldest entries
     if the count exceeds the specified limit.
