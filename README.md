@@ -52,10 +52,10 @@ Or download and extract the ZIP file, then navigate to the project directory.
 
 Install required dependencies
 
-```bash   pip install -r requirements.txt```
+```pip install -r requirements.txt```
 
 Run WireShrimp
 
-```bash   python main.py run```
+```python main.py run```
 Note: On Linux/Mac, you may need to run with elevated privileges:
-```bash   sudo python main.py run```
+```sudo python main.py run```
