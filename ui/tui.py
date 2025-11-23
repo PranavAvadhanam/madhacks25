@@ -69,6 +69,7 @@ class WireShrimpApp(App):
             content += f"### Explanation\n{packet.educational_data}"
             
             detail_content.update(content)
+            detail_view_container.border_title = "Packet Info"
             detail_view_container.remove_class("hidden")
             detail_view_container.add_class("visible")
             detail_view_container.focus()
@@ -79,6 +80,7 @@ class WireShrimpApp(App):
         """Hide the detail view."""
         self.screen.remove_class("dimmed")
         detail_view_container = self.query_one("#detail_view")
+        detail_view_container.border_title = ""
         detail_view_container.remove_class("visible")
         detail_view_container.add_class("hidden")
 
