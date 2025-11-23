@@ -87,7 +87,7 @@ class WireShrimpApp(App):
     async def update_packet_table(self) -> None:
         """Periodically queries the database and redraws the entire table."""
         # Add a small initial delay to give the sniffer time to start up
-        await asyncio.sleep(2.0)
+        await asyncio.sleep(.3)
         
         display_limit = 1000
         while self.is_running:
@@ -102,19 +102,75 @@ class WireShrimpApp(App):
                 packets_to_display = all_packets[-display_limit:][::-1]
 
                 table = self.query_one(DataTable)
-                
+
+                # Preserve current scroll position and row count so we can
+                # restore the user's viewport after updating the table.
+                try:
+                    old_row_count = table.row_count
+                    old_scroll_y = int(table.scroll_y)
+                except Exception:
+                    old_row_count = 0
+                    old_scroll_y = 0
+
                 # Clear and update rows.
                 table.clear()
+                table.scroll_y = old_scroll_y
                 rows = []
+                # Compute available width for the table and reserve fixed widths
+                # for the first columns so we can truncate the `Info` column to
+                # avoid horizontal scrolling.
+                try:
+                    total_width = self.size.width
+                except Exception:
+                    # Fallback if size is not available in this context
+                    total_width = 80
+
+                # Fixed approximate widths for columns (characters)
+                fixed_widths = {
+                    "ID": 6,
+                    "Time": 19,
+                    "Src": 15,
+                    "Dst": 15,
+                    "Protocol": 8,
+                }
+                fixed_total = sum(fixed_widths.values()) + (len(self.PACKET_TABLE_COLUMNS) - 1) * 3
+                # leave at least 10 chars for Info
+                max_info = max(10, total_width - fixed_total)
+
+                def truncate(text: str, limit: int) -> str:
+                    if text is None:
+                        return ""
+                    s = str(text)
+                    return s if len(s) <= limit else s[: max(0, limit - 1)] + "…"
+
                 for pkt in packets_to_display:
-                    rows.append((pkt.id, pkt.timestamp, pkt.source_ip, pkt.destination_ip, pkt.protocol_type, pkt.summary))
+                    info = truncate(pkt.summary, max_info)
+                    src = truncate(pkt.source_ip, fixed_widths["Src"])
+                    dst = truncate(pkt.destination_ip, fixed_widths["Dst"])
+                    proto = truncate(pkt.protocol_type, fixed_widths["Protocol"])
+                    rows.append((pkt.id, pkt.timestamp, src, dst, proto, info))
                 
                 if rows:
                     table.add_rows(rows)
-                
-                # Scroll to the top to see the latest packets.
-                if rows:
-                    table.scroll_home(animate=False)
+
+                    # If the user was at the top before the update, keep
+                    # auto-scrolling to show newest entries. Otherwise,
+                    # restore their previous viewport by adjusting for the
+                    # number of rows that were added at the top.
+                    # new_row_count = table.row_count
+                    # added = max(0, new_row_count - old_row_count)
+
+                    # if old_scroll_y <= 0:
+                    #     # Auto-scroll to top (newest) when user is at top.
+                    #     table.scroll_home(animate=False)
+                    # else:
+                    #     # Keep the same content in view by scrolling to the
+                    #     # row index shifted by the number of new rows.
+                    #     try:
+                    #         table.scroll_to(y=old_scroll_y + added, immediate=True)
+                    #     except Exception:
+                    #         # Fallback: don't change scroll if scroll_to fails.
+                    #         pass
 
             except Exception as e:
                 self.log_message(f"[ERROR] Failed to update table: {e}")

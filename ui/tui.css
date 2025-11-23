@@ -49,6 +49,8 @@ Footer {
     width: 1fr;
     height: 1fr;
     border: heavy #404040;
+    /* Prevent horizontal scrolling by hiding horizontal overflow */
+    overflow-x: hidden;
 }
 
 #log_panel {
