@@ -1,5 +1,4 @@
 import asyncio
-import asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from typing import Dict, Any, List
@@ -14,8 +13,13 @@ DATABASE_URL = "sqlite:///./packets.db"
 # The SQLAlchemy engine is the starting point for any SQLAlchemy application.
 engine = create_engine(
     DATABASE_URL,
-    # `connect_args` is needed for SQLite to allow multi-threaded access.
-    connect_args={"check_same_thread": False}
+    # `connect_args` is passed to the DB-API driver.
+    connect_args={
+        "check_same_thread": False,
+        # Increase the timeout to 20 seconds to wait for the database lock
+        # to be released, which is crucial in a multi-threaded writer scenario.
+        "timeout": 20
+    }
 )
 
 # A SessionLocal class, which will be used to create individual database sessions.
@@ -60,12 +64,40 @@ async def bulk_insert_processed_packets_async(packets: List[Dict[str, Any]]):
     """
     await asyncio.to_thread(bulk_insert_processed_packets, packets)
 
+def prune_database(limit: int = 10000):
+    """
+    Checks the number of rows in the database and deletes the oldest entries
+    if the count exceeds the specified limit.
+    """
+    db_session = SessionLocal()
+    try:
+        row_count = db_session.query(ProcessedPacket).count()
+        
+        if row_count > limit:
+            num_to_delete = row_count - limit
+            # Since IDs are auto-incrementing, the lowest IDs are the oldest.
+            # We find the ID of the last row we want to delete.
+            subquery = db_session.query(ProcessedPacket.id).order_by(ProcessedPacket.id).limit(num_to_delete).subquery()
+            
+            # Execute a bulk delete on the subquery
+            delete_query = db_session.query(ProcessedPacket).filter(ProcessedPacket.id.in_(subquery))
+            deleted_count = delete_query.delete(synchronize_session=False)
+            db_session.commit()
+            print(f"--- Pruned {deleted_count} old packets from the database. ---")
+
+    finally:
+        db_session.close()
+
+async def prune_database_async(limit: int = 10000):
+    """
+    Asynchronously prunes the database by running the blocking prune function
+    in a separate thread.
+    """
+    await asyncio.to_thread(prune_database, limit)
+
 def get_all_packets() -> List[ProcessedPacket]:
     """
     Retrieves all processed packets from the database.
-
-    Returns:
-        A list of ProcessedPacket ORM objects.
     """
     db_session = SessionLocal()
     try:
