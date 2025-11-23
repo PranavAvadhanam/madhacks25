@@ -157,26 +157,26 @@ class WireShrimpApp(App):
                     # auto-scrolling to show newest entries. Otherwise,
                     # restore their previous viewport by adjusting for the
                     # number of rows that were added at the top.
-                    # new_row_count = table.row_count
-                    # added = max(0, new_row_count - old_row_count)
+                    new_row_count = table.row_count
+                    added = max(0, new_row_count - old_row_count)
 
-                    # if old_scroll_y <= 0:
-                    #     # Auto-scroll to top (newest) when user is at top.
-                    #     table.scroll_home(animate=False)
-                    # else:
-                    #     # Keep the same content in view by scrolling to the
-                    #     # row index shifted by the number of new rows.
-                    #     try:
-                    #         table.scroll_to(y=old_scroll_y + added, immediate=True)
-                    #     except Exception:
-                    #         # Fallback: don't change scroll if scroll_to fails.
-                    #         pass
+                    if old_scroll_y <= 0:
+                        # Auto-scroll to top (newest) when user is at top.
+                        table.scroll_home(animate=False)
+                    else:
+                        # Keep the same content in view by scrolling to the
+                        # row index shifted by the number of new rows.
+                        try:
+                            table.scroll_to(y=old_scroll_y + added, immediate=True)
+                        except Exception:
+                            # Fallback: don't change scroll if scroll_to fails.
+                            pass
 
             except Exception as e:
                 self.log_message(f"[ERROR] Failed to update table: {e}")
 
             # Wait before the next refresh
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(.2)
     
     def action_quit(self) -> None:
         """An action to quit the app."""
