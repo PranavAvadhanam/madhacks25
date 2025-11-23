@@ -4,7 +4,7 @@ Screen {
     align: center middle;
     layer: main;
     background: transparent;
-    color: #cccccc;
+    color: #D3C6AA; /* --foreground */
     layout: grid;
 
     /* Scrollbar Styling */
@@ -26,8 +26,8 @@ Header {
     layer: main;
     dock: top;
     height: 1;
-    background: #282828;
-    color: #e0e0e0;
+    background: #272E33; /* --surface */
+    color: #D3C6AA; /* --foreground */
     text-align: center;
 }
 
@@ -36,8 +36,8 @@ Footer {
     layer: main;
     dock: bottom;
     height: 0;
-    background: #282828;
-    color: #e0e0e0;
+    background: #272E33; /* --surface */
+    color: #D3C6AA; /* --foreground */
     text-align: center;
 }
 
@@ -45,12 +45,12 @@ Footer {
     align: center middle;
     layer: main;
     height: 1fr;
-    border: tall #404040;
+    border: tall #2E383C; /* --panel */
     overflow-x: scroll;
     scrollbar-size-vertical: 1;
     scrollbar-size-horizontal: 0;
-    background: #2d2d2d;
-    color: #cccccc;
+    background: #1E2326; /* --background */
+    color: #D3C6AA; /* --foreground */
 }
 
 #command_input {
@@ -58,9 +58,9 @@ Footer {
     layer: main;
     dock: bottom;
     height: 3;
-    background: #2d2d2d;
-    color: #ffffff;
-    border: round white;
+    background: #272E33; /* --surface */
+    color: #D3C6AA; /* --foreground */
+    border: round #A7C080; /* --primary */
     padding: 0 1;
 }
 
@@ -71,9 +71,9 @@ Footer {
     display: none;
 
     /* REVISED STYLES: Using Gruvbox colors for consistency */
-    background: #282828; /* Dark background for the modal */
+    background: #1E2326; /* --background */
     border: none;
-    color: orange; /* Gruvbox light text */
+    color: #DBBC7F; /* --accent */
     padding: 1 3;
     box-sizing: border-box;
     
@@ -87,12 +87,12 @@ Footer {
     overflow-y: scroll;
     scrollbar-size-vertical: 0;
     scrollbar-size-horizontal: 0;
-    border-title-align: center;
+    border-subtitle-align: center;
 }
 
 #detail_view.visible {
     /* Use consistent border and display setting */
-    border: double orange;
+    border: double #DBBC7F; /* --accent */
     margin: 0;
     display: block;
     box-sizing: border-box;
