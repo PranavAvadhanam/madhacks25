@@ -18,7 +18,6 @@ class WireShrimpApp(App):
 
     CSS_PATH = "tui.css"
     BINDINGS = [
-        ("d", "toggle_dark", "Toggle dark mode"),
         ("q", "quit", "Quit App"),
         ("escape", "hide_details", "Hide Detail View"),
     ]
@@ -41,7 +40,7 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, friend, quit window (qw), view <id>", id="command_input")
+        yield Input(placeholder="Commands: e.g. start, stop, help, quit", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -137,17 +136,19 @@ class WireShrimpApp(App):
         self.screen.add_class("dimmed")
         
         help_text = "## Available Commands\n\n"
-        help_text += "*   **`filter <protocol>`**: Filter packets by a specific protocol (e.g., `filter tcp`, `filter udp`).\n"
-        help_text += "*   **`filter clear`**: Clear the current packet filter.\n"
+        help_text += "*   **`quit`**: Exit the application.\n"
         help_text += "*   **`stop`**: Stop the packet sniffing process.\n"
         help_text += "*   **`start`**: Start the packet sniffing process if it was stopped.\n"
-        help_text += "*   **`view <id>`**: Display detailed information for a specific packet, identified by its ID.\n"
-        help_text += "*   **`help`**: Show this help message.\n"
-        help_text += "*   **`quit`**: Exit the application.\n"
+        help_text += "*   **`friend`**: Toggle friendly mode. When active, it displays friendly names for IP addresses (e.g., 'Bucky' for 142.250.190.14).\n"
+        help_text += "*   **`qw`** or **`quit window`**: Hide the currently open detail view (e.g., 'Packet Info' or 'Help Information').\n"
+        help_text += "*   **`filter <protocol>`**: Filter the displayed packets by a specific protocol (e.g., `filter tcp`, `filter udp`, `filter icmp`).\n"
+        help_text += "*   **`filter <IP_address>`**: Filter packets by a specific source or destination IP address (e.g., `filter 192.168.1.1`, `filter 10.0.0.5`).\n"
+        help_text += "*   **`filter clear`**: Clear any active packet filter, displaying all captured packets.\n"
+        help_text += "*   **`view <id>`**: Open a detailed view for a specific packet, identified by its unique ID in the table.\n"
+        help_text += "*   **`help`**: Display this help information.\n"
         help_text += "\n### Keyboard Shortcuts\n\n"
-        help_text += "*   **`d`**: Toggle dark mode.\n"
-        help_text += "*   **`q`**: Quit App.\n"
-        help_text += "*   **`escape`**: Hide the current detail view (e.g., Packet Info or Help).\n"
+        help_text += "*   **`q`**: Immediately quit the application.\n"
+        help_text += "*   **`escape`**: Hide the current detail view (e.g., 'Packet Info' or 'Help Information').\n"
 
 
         detail_content.update(help_text)
