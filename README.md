@@ -38,3 +38,23 @@ During development, we encountered a critical performance bottleneck. The initia
     *   A timeout is reached (e.g., 2 seconds), ensuring data is saved even during periods of low traffic.
 
 This approach dramatically reduces database overhead and allows the application to keep up with high-traffic networks, ensuring reliable data capture.
+
+# Getting Started
+Installation
+
+Clone or download the repository
+
+```bash   git clone <repository-url>
+   cd WireShrimp
+```
+Or download and extract the ZIP file, then navigate to the project directory.
+
+Install required dependencies
+
+```bash   pip install -r requirements.txt```
+
+Run WireShrimp
+
+```bash   python main.py run```
+Note: On Linux/Mac, you may need to run with elevated privileges:
+```bash   sudo python main.py run```
