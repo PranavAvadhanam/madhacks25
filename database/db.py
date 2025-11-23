@@ -64,7 +64,7 @@ async def bulk_insert_processed_packets_async(packets: List[Dict[str, Any]]):
     """
     await asyncio.to_thread(bulk_insert_processed_packets, packets)
 
-def prune_database(limit: int = 100000):
+def prune_database(limit: int = 10000):
     """
     Checks the number of rows in the database and deletes the oldest entries
     if the count exceeds the specified limit.
@@ -81,9 +81,8 @@ def prune_database(limit: int = 100000):
             
             # Execute a bulk delete on the subquery
             delete_query = db_session.query(ProcessedPacket).filter(ProcessedPacket.id.in_(subquery))
-            deleted_count = delete_query.delete(synchronize_session=False)
+            delete_query.delete(synchronize_session=False)
             db_session.commit()
-            print(f"--- Pruned {deleted_count} old packets from the database. ---")
 
     finally:
         db_session.close()
@@ -101,7 +100,6 @@ def get_all_packets() -> List[ProcessedPacket]:
     """
     db_session = SessionLocal()
     try:
-        print("Fetching all packets from the database...")
         packets = db_session.query(ProcessedPacket).all()
         return packets
     finally:
