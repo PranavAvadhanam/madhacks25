@@ -1,7 +1,7 @@
 # TODO: Explore using a more robust model definition library if complexity grows,
 #       such as Pydantic with SQLAlchemy.
 
-from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, LargeBinary, create_engine, Text, DateTime
 from sqlalchemy.orm import declarative_base
 
 # The Base which our ORM classes will inherit from.
@@ -19,15 +19,29 @@ class ProcessedPacket(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     source_ip = Column(String(50), nullable=True)
     destination_ip = Column(String(50), nullable=True)
-    protocol_type = Column(String(10))
-    summary = Column(String(255))
-    timestamp = Column(String(50))
+    protocol_type = Column(String(10)) # TCP, UDP, etc.
+    
+    # NEW COLUMNS
+    service_name = Column(String(50)) # e.g., "HTTPS", "DNS", "Minecraft"
+    traffic_direction = Column(String(10)) # "Upload" or "Download"
+    
+    # The "Human" Translation
+    # e.g. "Initiating a secure connection to a web server."
+    friendly_summary = Column(String(255)) 
+    
+    # JSON string for the "Educational Mode" sidebar
+    # e.g. '{"flag_explanation": "SYN means synchronize...", "port_explanation": "..."}'
+    educational_data = Column(Text) 
+
+    raw_packet = Column(LargeBinary)
+    link_type = Column(String(50))
+    timestamp = Column(DateTime)
 
     def __repr__(self):
         return (
             f"<ProcessedPacket(id={self.id}, "
             f"src='{self.source_ip}', dst='{self.destination_ip}', "
-            f"proto='{self.protocol_type}')>"
+            f"proto='{self.protocol_type}', service='{self.service_name}')>"
         )
 
 # Example of how to create the database and table,

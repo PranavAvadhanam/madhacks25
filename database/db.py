@@ -109,22 +109,6 @@ if __name__ == '__main__':
     # A simple script to initialize the DB and test inserting/reading data.
     init_db()
 
-    # Example of inserting a batch of packets
-    test_packets = [
-        {
-            'source_ip': '192.168.1.100', 'destination_ip': '8.8.8.8',
-            'protocol_type': 'DNS', 'summary': 'Query A www.example.com',
-            'timestamp': '2025-11-22 13:45:00'
-        },
-        {
-            'source_ip': '192.168.1.101', 'destination_ip': '8.8.4.4',
-            'protocol_type': 'ICMP', 'summary': 'Echo Request',
-            'timestamp': '2025-11-22 13:45:01'
-        }
-    ]
-    bulk_insert_processed_packets(test_packets)
-
-    # Example of fetching all packets
     all_packets = get_all_packets()
     print(f"Found {len(all_packets)} packets in the database.")
     for packet in all_packets:

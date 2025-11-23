@@ -1,5 +1,6 @@
 import asyncio
 import socket
+from datetime import datetime
 from typing import Dict, Any
 from scapy.all import AsyncSniffer
 from scapy.layers.inet import IP, TCP, UDP
@@ -9,9 +10,25 @@ from database.db import bulk_insert_processed_packets_async, prune_database_asyn
 Packet = Dict[str, Any]
 knownIps = []
 
+# Mapping of IP protocol numbers to their string representations
+IP_PROTOCOL_MAP = {
+    1: "ICMP",
+    2: "IGMP",
+    6: "TCP",
+    17: "UDP",
+    41: "IPv6",
+    47: "GRE",
+    50: "ESP",
+    51: "AH",
+    89: "OSPF",
+    132: "SCTP",
+}
+
 
 def _extract_packet_fields(pkt) -> Dict[str, Any]:
     ts = getattr(pkt, "time", None)
+    if ts is not None:
+        ts = datetime.fromtimestamp(ts)
 
     src = dst = None
     if IP in pkt:
@@ -23,6 +40,9 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
     else:
         src = getattr(pkt, "src", None)
         dst = getattr(pkt, "dst", None)
+
+    local_ip = get_local_ip()
+    traffic_direction = "Upload" if src == local_ip else "Download"
 
     # Detect starting layer
     first_layer = pkt.firstlayer().name
@@ -39,7 +59,8 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
     elif UDP in pkt:
         proto = "UDP"
     elif IP in pkt:
-        proto = str(pkt[IP].proto)
+        proto_num = pkt[IP].proto
+        proto = IP_PROTOCOL_MAP.get(proto_num, str(proto_num))
     else:
         proto = pkt.name if hasattr(pkt, "name") else None
 
@@ -53,6 +74,10 @@ def _extract_packet_fields(pkt) -> Dict[str, Any]:
         "length": length,
         "raw_packet": bytes(pkt),
         "link_type": link_type,
+        "service_name": "Unknown",
+        "traffic_direction": traffic_direction,
+        "friendly_summary": "No summary available.",
+        "educational_data": "{}",
     }
 
 
@@ -98,6 +123,10 @@ def process_packet(packet: Packet) -> Dict[str, Any]:
         "raw_packet": packet.get("raw_packet"),
         "link_type": packet.get("link_type"),
         "timestamp": packet.get("time"),
+        "service_name": packet.get("service_name"),
+        "traffic_direction": packet.get("traffic_direction"),
+        "friendly_summary": packet.get("friendly_summary"),
+        "educational_data": packet.get("educational_data"),
     }
 
 

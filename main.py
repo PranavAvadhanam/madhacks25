@@ -66,7 +66,9 @@ def run(interface):
                         print(
                             f"  - ID: {packet.id}, Time: {packet.timestamp}, "
                             f"Src: {packet.source_ip}, Dst: {packet.destination_ip}, "
-                            f"Proto: {packet.protocol_type}, Info: {packet.summary}"
+                            f"Proto: {packet.protocol_type}, Service: {packet.service_name}, "
+                            f"Direction: {packet.traffic_direction}\n"
+                            f"    Summary: {packet.friendly_summary}"
                         )
                     if len(all_packets) > 10:
                         print(f"  ... and {len(all_packets) - 10} more.")
