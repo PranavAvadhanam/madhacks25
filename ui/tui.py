@@ -4,6 +4,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable, Input, Markdown
 from textual.containers import Container
 from textual import on
+import json
 
 # Assumed imports based on your snippet
 from database import get_all_packets, get_packet_by_id
@@ -66,7 +67,48 @@ class WireShrimpApp(App):
             content += f"**Destination:** {packet.destination_ip}\n"
             content += f"**Protocol:** {packet.protocol_type}\n"
             content += f"**Service:** {packet.service_name}\n\n"
-            content += f"### Explanation\n{packet.educational_data}"
+            
+            # --- Start of JSON parsing and formatting for educational_data ---
+            try:
+                educational_data = json.loads(packet.educational_data)
+                
+                content += "### Educational Explanation\n"
+                
+                # Protocol Overview
+                if "protocol_overview" in educational_data:
+                    po = educational_data["protocol_overview"]
+                    content += f"#### Protocol: {po.get('name', 'N/A')}\n"
+                    content += f"{po.get('description', 'No description available.')}\n\n"
+                    
+                # Packet Role
+                if "packet_role" in educational_data:
+                    pr = educational_data["packet_role"]
+                    content += f"#### Packet Role: {pr.get('type', 'N/A')}\n"
+                    content += f"{pr.get('description', 'No specific role identified.')}\n"
+                    if "details" in pr:
+                        content += f"Details: {pr['details']}\n"
+                    if "flags" in pr and pr["flags"]:
+                        content += "\n##### TCP Flags:\n"
+                        for flag_item in pr["flags"]:
+                            content += f"* **{flag_item.get('flag', '')}:** {flag_item.get('meaning', '')}\n"
+                    content += "\n"
+                        
+                # Service Context
+                if "service_context" in educational_data:
+                    sc = educational_data["service_context"]
+                    content += f"#### Service Context: {sc.get('name', 'N/A')}\n"
+                    content += f"Port: {sc.get('port', 'N/A')}\n"
+                    content += f"{sc.get('description', 'No service context available.')}\n\n"
+                    
+                # Educational Tips
+                if "educational_tips" in educational_data and educational_data["educational_tips"]:
+                    content += "#### Educational Tips:\n"
+                    for tip in educational_data["educational_tips"]:
+                        content += f"* {tip}\n"
+                
+            except json.JSONDecodeError:
+                content += f"### Explanation (Error parsing educational data):\n{packet.educational_data}\n"
+            # --- End of JSON parsing and formatting for educational_data ---
             
             detail_content.update(content)
             detail_view_container.border_title = "Packet Info"
@@ -80,6 +122,7 @@ class WireShrimpApp(App):
         """Hide the detail view."""
         self.screen.remove_class("dimmed")
         detail_view_container = self.query_one("#detail_view")
+        detail_view_container.border_title = ""
         detail_view_container.remove_class("visible")
         detail_view_container.add_class("hidden")
 
