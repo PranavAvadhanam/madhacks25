@@ -27,7 +27,7 @@ async def main():
 
     try:
         # Create the main task for the packet engine, passing the interface
-        main_task = asyncio.create_task(main_engine(interface=INTERFACE_TO_USE))
+        main_task = asyncio.create_task(main_engine(interface=None))
         await main_task
     except asyncio.CancelledError:
         # This is expected during a graceful shutdown.

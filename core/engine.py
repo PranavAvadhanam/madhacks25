@@ -129,7 +129,7 @@ async def process_and_store(packet_queue: asyncio.Queue):
             if batch:
                 await bulk_insert_processed_packets_async(batch)
                 print(f"--- Flushed {len(batch)} packets to database (timeout). ---")
-                print(batch)
+                #print(batch)
                 batch = []
 
         except asyncio.CancelledError:
