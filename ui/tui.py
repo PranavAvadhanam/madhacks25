@@ -204,6 +204,9 @@ class WireShrimpApp(App):
                 if arg == "clear":
                     self.current_filter = None
                     self.notify("Filter cleared.")
+                elif "." in arg or "/" in arg:
+                    self.notify("Filtering for IP: " + arg)
+                    self.current_filter = arg
                 else:
                     self.current_filter = arg
                     self.notify(f"Filtering for protocol: {arg.upper()}")
@@ -246,13 +249,23 @@ class WireShrimpApp(App):
                 # --- FILTERING LOGIC ---
                 # Filter packets BEFORE slicing if a filter is active
                 if self.current_filter:
-                    filtered_packets = [
-                        p for p in all_packets 
-                        if p.protocol_type and self.current_filter.lower() in p.protocol_type.lower()
-                    ]
-                    # Update the header sub-title to show filter status
-                    self.sub_title = f"Filter: {self.current_filter.upper()} ({len(filtered_packets)} pkts)"
-                    packets_to_display = filtered_packets[-display_limit:][::-1]
+            
+                    if "." in self.current_filter or "/" in self.current_filter:
+                        filtered_packets = [
+                            p for p in all_packets 
+                            if p.source_ip == self.current_filter or p.destination_ip == self.current_filter
+                        ]
+                        # Update the header sub-title to show filter status
+                        self.sub_title = f"Filter: {self.current_filter} ({len(filtered_packets)} pkts)"
+                        packets_to_display = filtered_packets[-display_limit:][::-1]
+                    elif self.current_filter:
+                        filtered_packets = [
+                            p for p in all_packets 
+                            if p.protocol_type and self.current_filter.lower() in p.protocol_type.lower()
+                        ]
+                        # Update the header sub-title to show filter status
+                        self.sub_title = f"Filter: {self.current_filter.upper()} ({len(filtered_packets)} pkts)"
+                        packets_to_display = filtered_packets[-display_limit:][::-1]
                 else:
                     self.sub_title = "Live Capture"
                     packets_to_display = all_packets[-display_limit:][::-1]
