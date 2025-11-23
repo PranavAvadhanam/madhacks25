@@ -28,14 +28,10 @@ def run(interface):
     # Clean up previous database file for a fresh run
     if os.path.exists(DB_FILE):
         os.remove(DB_FILE)
-        print(f"Removed existing database file: {DB_FILE}")
 
     # Initialize the database and create tables
     init_db()
-    print("Database initialized.")
 
-    print("Starting the WireShrimp application...")
-    print("Press Ctrl+C or 'q' to quit the app.")
 
     try:
         app = WireShrimpApp()

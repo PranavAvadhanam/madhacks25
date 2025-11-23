@@ -33,9 +33,7 @@ def init_db():
     in the database connected to by the engine. It should be called once at
     application startup.
     """
-    print("Initializing the database...")
     Base.metadata.create_all(bind=engine)
-    print("Database initialized.")
 
 def bulk_insert_processed_packets(packets: List[Dict[str, Any]]):
     """

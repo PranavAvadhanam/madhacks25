@@ -53,6 +53,4 @@ if __name__ == '__main__':
     DATABASE_URL = "sqlite:///./packets.db"
     engine = create_engine(DATABASE_URL)
 
-    print("Creating database and table 'processed_packets'...")
     Base.metadata.create_all(bind=engine)
-    print("Done.")
