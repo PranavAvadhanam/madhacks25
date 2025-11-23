@@ -77,7 +77,7 @@ async def process_and_store(packet_queue: asyncio.Queue):
     in batches using a robust and performant batching strategy.
     """
     batch = []
-    BATCH_SIZE = 500  # Increased batch size
+    BATCH_SIZE = 100  # Increased batch size
     FLUSH_INTERVAL = 0.5  # Flush at least once per second
 
     while True:
