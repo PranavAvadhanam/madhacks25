@@ -8,7 +8,7 @@ Wireshark is the industry standard for network protocol analysis, offering immen
 
 ## Our Solution: A Stepping Stone to Network Analysis
 
-We are building a Command-Line Interface (CLI) tool that serves as a "stepping stone" to more advanced tools like Wireshark. By adding a layer of abstraction, our tool will provide a user-friendly way to capture, analyze, and understand network traffic. The goal is to make network analysis more accessible and intuitive for those new to the field, fostering a better understanding of fundamental networking concepts.
+We are building a Command-Line Interface (CLI) tool that serves as a "stepping stone" to more advanced tools like Wireshark. By adding a layer of abstraction, our tool will provide a user-friendly way to capture, analyze, and understand their own network traffic. The goal is to make network analysis more accessible and intuitive for those new to the field, fostering a better understanding of fundamental networking concepts.
 
 ## Key Features
 

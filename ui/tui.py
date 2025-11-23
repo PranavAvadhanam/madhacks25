@@ -40,7 +40,7 @@ class WireShrimpApp(App):
         with Container(id="detail_view", classes="hidden"):
             yield Markdown(id="detail_content")
         # Updated placeholder to include filter command
-        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, view <id>", id="command_input")
+        yield Input(placeholder="Commands: filter <proto>, filter clear, stop, start, quit window (qw), view <id>", id="command_input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -62,6 +62,8 @@ class WireShrimpApp(App):
         if packet:
             self.screen.add_class("dimmed")
             content = f"## Packet ID: {packet.id}\n\n"
+            content += f"**Friendly Source Name:** {packet.friendly_src}\n"
+            content += f"**Friendly Destination Name:** {packet.friendly_dst}\n"
             content += f"**Timestamp:** {packet.timestamp}\n"
             content += f"**Source:** {packet.source_ip}\n"
             content += f"**Destination:** {packet.destination_ip}\n"
@@ -165,8 +167,8 @@ class WireShrimpApp(App):
         print(f"Command received: '{command}'")
         
         if command == "quit":
-            self.sniffer_worker.cancel()
-            self.exit()
+           self.sniffer_worker.cancel()
+           self.exit()
 
         elif command == "stop":
             if self.is_sniffing:
@@ -174,11 +176,17 @@ class WireShrimpApp(App):
                 self.is_sniffing = False
                 self.notify("Packet sniffer stopped.")
 
+
         elif command == "start":
             if not self.is_sniffing:
                 self.sniffer_worker = self.run_worker(self.run_sniffer, exclusive=False, name="Sniffer")
                 self.is_sniffing = True
                 self.notify("Packet sniffer started.")
+
+
+        elif command == "qw" or command == "quit window":
+            self.action_hide_details()
+
 
         elif command == "filter":
             # Handle 'filter clear' or 'filter <protocol>'
@@ -192,6 +200,7 @@ class WireShrimpApp(App):
                     self.notify(f"Filtering for protocol: {arg.upper()}")
             else:
                 self.notify("Usage: filter <protocol> OR filter clear")
+
 
         elif command == "view":
             if len(command_parts) > 1 and command_parts[1].isdigit():
