@@ -303,6 +303,16 @@ class WireShrimpApp(App):
                     s = str(text)
                     return s if len(s) <= limit else s[: max(0, limit - 1)] + "…"
 
+                # Protocol color mapping
+                protocol_colors = {
+                    "ARP": "#83C092",
+                    "UDP": "#DBBC7F",  # Yellow
+                    "ICMP": "#E67E80", # Red
+                    "TCP": "#7FBBB3", # Cyan (from accents list)
+                    "DNS": "#D699B6", # Magenta (from accents list)
+                    # Add more protocols and colors as needed
+                }
+
                 for pkt in packets_to_display:
                     time_ago = ""
                     if pkt.timestamp:
@@ -312,10 +322,15 @@ class WireShrimpApp(App):
                     summary = truncate(pkt.friendly_summary, max_summary)
                     src = truncate(pkt.source_ip, fixed_widths["Src"])
                     dst = truncate(pkt.destination_ip, fixed_widths["Dst"])
-                    proto = truncate(pkt.protocol_type, fixed_widths["Protocol"])
+                    
+                    # Apply color based on protocol type
+                    proto_text = truncate(pkt.protocol_type, fixed_widths["Protocol"])
+                    color = protocol_colors.get(proto_text.upper(), "#83C092") # Default to another accent if not found
+                    colored_proto = f"[{color}]{proto_text}[/]"
+
                     service = truncate(pkt.service_name, fixed_widths["Service"])
                     direction = truncate(pkt.traffic_direction, fixed_widths["Direction"])
-                    rows.append((pkt.id, time_ago, src, dst, proto, service, direction, summary))
+                    rows.append((pkt.id, time_ago, src, dst, colored_proto, service, direction, summary))
                 
                 if rows:
                     table.add_rows(rows)
