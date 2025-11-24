@@ -47,7 +47,6 @@ Footer {
     height: 1fr;
     border: tall #2E383C; /* panel */
     overflow-x: scroll;
-    overflow-y: scroll;
     scrollbar-size-vertical: 2;
     scrollbar-size-horizontal: 1;
     background: #1E2326; /* background */
