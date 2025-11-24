@@ -140,7 +140,7 @@ class WireShrimpApp(App):
         help_text += "*   **`stop`**: Stop the packet sniffing process.\n"
         help_text += "*   **`start`**: Start the packet sniffing process if it was stopped.\n"
         help_text += "*   **`friend`**: Toggle friendly mode. When active, it displays friendly names for IP addresses (e.g., 'Bucky' for 142.250.190.14).\n"
-        help_text += "*   **`qw`** or **`quit window`**: Hide the currently open detail view (e.g., 'Packet Info' or 'Help Information').\n"
+        help_text += "*   **`qw`** or **`quitwindow`**: Hide the currently open detail view (e.g., 'Packet Info' or 'Help Information').\n"
         help_text += "*   **`filter <protocol>`**: Filter the displayed packets by a specific protocol (e.g., `filter tcp`, `filter udp`, `filter icmp`).\n"
         help_text += "*   **`filter <IP_address>`**: Filter packets by a specific source or destination IP address (e.g., `filter 192.168.1.1`, `filter 10.0.0.5`).\n"
         help_text += "*   **`filter clear`**: Clear any active packet filter, displaying all captured packets.\n"
@@ -168,7 +168,7 @@ class WireShrimpApp(App):
         self.query_one(Input).value = ""
         print(f"Command received: '{command}'")
         
-        if command == "quit":
+        if command_parts[0] == "quit":
            self.sniffer_worker.cancel()
            self.exit()
 
@@ -194,7 +194,7 @@ class WireShrimpApp(App):
                 self.notify("Packet sniffer started.")
 
 
-        elif command == "qw" or command == "quit window":
+        elif command == "qw" or command == "quitwindow":
             self.action_hide_details()
 
 
