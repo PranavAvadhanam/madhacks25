@@ -34,6 +34,23 @@ class WireShrimpApp(App):
       ("escape", "hide_details", "Hide Detail View"),
   ]
 
+  ADJECTIVE_CACHE = [
+    "Swift", "Bright", "Noble", "Strong", "Wise", 
+    "Bold", "Clever", "Keen", "Brave", "Quick",
+    "Radiant", "Mighty", "Graceful", "Vibrant", "Stellar",
+    "Brilliant", "Valiant", "Daring", "Nimble", "Fearless",
+    "Gleaming", "Majestic", "Spirited", "Lively", "Dazzling",
+    "Gallant", "Intrepid", "Zealous", "Glorious", "Luminous",
+    "Serene", "Tranquil", "Peaceful", "Calm", "Gentle",
+    "Cheerful", "Joyful", "Merry", "Sunny", "Happy",
+    "Elegant", "Refined", "Polished", "Pristine", "Pure",
+    "Loyal", "True", "Faithful", "Steadfast", "Devoted",
+    "Astute", "Witty", "Sharp", "Savvy", "Canny",
+    "Cosmic", "Mystic", "Ancient", "Eternal", "Timeless",
+    "Golden", "Silver", "Crystal", "Diamond", "Emerald",
+    "Thunder", "Lightning", "Storm", "Blaze", "Frost",
+    "Azure", "Crimson", "Amber", "Jade", "Onyx"
+]
 
 
 
@@ -181,6 +198,7 @@ class WireShrimpApp(App):
       help_text += "*   **`qw`** or **`quitwindow`**: Hide the currently open detail view (e.g., 'Packet Info' or 'Help Information').\n"
       help_text += "*   **`filter <protocol>`**: Filter the displayed packets by a specific protocol (e.g., `filter tcp`, `filter udp`, `filter icmp`).\n"
       help_text += "*   **`filter <IP_address>`**: Filter packets by a specific source or destination IP address (e.g., `filter 192.168.1.1`, `filter 10.0.0.5`).\n"
+      help_text += "*   **`filter <friendly_adjective>`**: Filter packets by a specific source or destination friendly name (e.g., `filter Dazzling` or `filter dazzling` for \"Dazzling Badger\").\n"
       help_text += "*   **`filter clear`**: Clear any active packet filter, displaying all captured packets.\n"
       help_text += "*   **`view <id>`**: Open a detailed view for a specific packet, identified by its unique ID in the table.\n"
       help_text += "*   **`help`**: Display this help information.\n"
@@ -215,11 +233,11 @@ class WireShrimpApp(App):
       self.query_one(Input).value = ""
       print(f"Command received: '{command}'")
     
-      if command_parts[0] == "quit":
+      if command_parts[0] == "quit" or (len(command_parts) == 1 and command_parts[0] == "q"):
          self.sniffer_worker.cancel()
          self.exit()
 
-
+    
 
 
       elif command == "stop":
@@ -267,7 +285,7 @@ class WireShrimpApp(App):
 
 
       elif command == "filter":
-          # Handle 'filter clear' or 'filter <protocol>'
+          # Handle 'filter clear' or 'filter <protocol>' or filter <friendly adjective>
           if len(command_parts) > 1:
               arg = command_parts[1]
               if arg == "clear":
@@ -276,11 +294,14 @@ class WireShrimpApp(App):
               elif "." in arg or "/" in arg:
                   self.notify("Filtering for IP: " + arg)
                   self.current_filter = arg
+              elif arg[0].upper()+arg[1:] in self.ADJECTIVE_CACHE:
+                  self.notify("Filtering for friend: " + arg[0].upper()+arg[1:] + " " + "Badger")
+                  self.current_filter = arg[0].upper()+arg[1:] + " " + "Badger"
               else:
                   self.current_filter = arg
                   self.notify(f"Filtering for protocol: {arg.upper()}")
           else:
-              self.notify("Usage: filter <protocol> OR filter clear")
+              self.notify("Usage: filter <protocol> OR filter clear OR filter <friend adjective>")
 
 
 
@@ -337,6 +358,13 @@ class WireShrimpApp(App):
                       filtered_packets = [
                           p for p in all_packets
                           if p.source_ip == self.current_filter or p.destination_ip == self.current_filter
+                      ]
+                      self.sub_title = f"Filter: {self.current_filter} ({len(filtered_packets)} pkts)"
+                  if " Badger" in self.current_filter:
+                      # Friendly filtering
+                      filtered_packets = [
+                          p for p in all_packets
+                          if p.friendly_src == self.current_filter or p.friendly_dst == self.current_filter
                       ]
                       self.sub_title = f"Filter: {self.current_filter} ({len(filtered_packets)} pkts)"
                   else:
